@@ -138,7 +138,7 @@ export default function StickyHeadTable() {
     <Paper sx={{ width: '100%', overflow: 'hidden' }}>
       <TableContainer sx={{ maxHeight: 440 }}>
         <Table stickyHeader aria-label="sticky table">
-          <TableHead>
+          <TableHead  style={{ zIndex: 0 }}>
             <TableRow>
               {columns.map((column) => (
                 <TableCell
@@ -189,6 +189,14 @@ export default function StickyHeadTable() {
         isOpen={isModalOpen}
         onRequestClose={handleCloseModal}
         contentLabel="문제 모달"
+        style={{
+          overlay: {
+            zIndex: 999
+          },
+          content: {
+            zIndex: 999
+          }
+        }}
       >
         <div className='flex flex-col mt-5 space-y-6'>
           <h2>문제 보기</h2>
