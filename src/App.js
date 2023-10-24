@@ -1,24 +1,22 @@
-import logo from './logo.svg';
 import './App.css';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import SolveTestTable from './pages/solveTest';
+import MakeTest from './pages/maketest';
+import Home from './pages/Home';
+import React from 'react';
+import NavigationBar from './navbar';
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+  return ( <BrowserRouter>
+    <div className="App mx-2">
+      <NavigationBar />
+        <Routes>
+          <Route path='/' element={<Home />} />
+          <Route path='/solve' element={<SolveTestTable />} />
+          <Route path='/make' element={<MakeTest />} />
+        </Routes>
+      
+    </div></BrowserRouter>
   );
 }
 
