@@ -33,7 +33,7 @@ function handleClick(event) {
 
 export default function NavigationBar() {
   return (
-    <div role="presentation" onClick={handleClick}>
+    <div role="presentation" onClick={handleClick} className='z-0'>
       <Breadcrumbs aria-label="breadcrumb">
         <Link to={"/"}>
         <StyledBreadcrumb
