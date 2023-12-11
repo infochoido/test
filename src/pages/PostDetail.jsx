@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
-import { doc, getDoc, deleteDoc, addDoc, collection, serverTimestamp, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { doc, getDoc, deleteDoc, addDoc, collection, serverTimestamp, query, where, getDocs, orderBy, onSnapshot } from 'firebase/firestore';
 
 const CommentForm = ({ postId }) => {
     const [content, setContent] = useState('');
@@ -69,10 +69,33 @@ const CommentForm = ({ postId }) => {
         console.error('Error fetching comments:', error);
       }
     };
+
+    const setupCommentsListener = () => {
+        const commentsCollectionRef = collection(db, 'comments');
+        const commentsQuery = query(commentsCollectionRef, where('postId', '==', postId), orderBy('createdAt', 'asc'));
+      
+        const unsubscribe = onSnapshot(commentsQuery, (snapshot) => {
+          const commentsData = [];
+          snapshot.forEach((doc) => {
+            commentsData.push({ id: doc.id, ...doc.data() });
+          });
+      
+          setComments(commentsData);
+        });
+      
+        return unsubscribe;
+      };
   
-    useEffect(() => {
-      fetchComments();
-    }, [postId]);
+      useEffect(() => {
+        // Fetch initial comments
+        fetchComments();
+      
+        // Set up real-time listener
+        const unsubscribe = setupCommentsListener();
+      
+        // Clean up listener on component unmount
+        return () => unsubscribe();
+      }, [postId]);
   
     const handleCommentDelete = async (commentId) => {
       const password = commentPasswords[commentId];
