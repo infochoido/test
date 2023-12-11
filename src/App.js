@@ -5,15 +5,17 @@ import MakeTest from './pages/maketest';
 import Home from './pages/Home';
 import React from 'react';
 import NavigationBar from './navbar';
+import PostDetail from './pages/PostDetail';
 
 function App() {
   return ( <BrowserRouter>
-    <div className="App mx-2">
+    <div className="mx-2 App">
       <NavigationBar />
         <Routes>
           <Route path='/' element={<Home />} />
-          <Route path='/solve' element={<SolveTestTable />} />
-          <Route path='/make' element={<MakeTest />} />
+          <Route path='/post' element={<SolveTestTable />} />
+          <Route path='/write' element={<MakeTest />} />
+          <Route path="/post/:postId" element={<PostDetail />} />
         </Routes>
       
     </div></BrowserRouter>

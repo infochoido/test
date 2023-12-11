@@ -43,11 +43,11 @@ export default function NavigationBar() {
           icon={<HomeIcon fontSize="small" />}
         />
         </Link>
-        <Link to="/solve">
-        <StyledBreadcrumb component="a" href="#" label="Solve" />
+        <Link to="/post">
+        <StyledBreadcrumb component="a" href="#" label="커뮤니티" />
         </Link>
-        <Link to="/make">
-        <StyledBreadcrumb component="a" href="#" label="makeTest" />
+        <Link to="/write">
+        <StyledBreadcrumb component="a" href="#" label="글쓰기" />
         </Link>
         
       </Breadcrumbs>

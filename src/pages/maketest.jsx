@@ -1,77 +1,87 @@
 import React, { useState } from 'react';
-import Box from '@mui/material/Box';
-import Input from '@mui/material/Input';
 import Button from '@mui/material/Button';
-import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc } from 'firebase/firestore';
+import { db } from '../firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
 
-const ariaLabel = { 'aria-label': 'description' };
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDsay0eJbHv-cfJU-J5thQfoHmClrxnJmM",
-  authDomain: "test-875d8.firebaseapp.com",
-  projectId: "test-875d8",
-  storageBucket: "test-875d8.appspot.com",
-  messagingSenderId: "230819283164",
-  appId: "1:230819283164:web:e2ef3e93945fc3c0593419"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const testCollectionRef = collection(db, 'tests'); // 'tests'는 Firestore 컬렉션 이름입니다.
 
 export default function MakeTest() {
   const [author, setauthor] = useState('');
   const [title, setTitle] = useState('');
   const [test, setTest] = useState('');
-  const [answer, setAnswer] = useState('');
-  const isButtonDisabled = !(author && title && test && answer);
+  const [password, setPassword] = useState('');
+  const isButtonDisabled = !(author && title && test && password);
+  const navigate = useNavigate();
 
   const handleAddTest = async () => {
     if (!isButtonDisabled) {
       try {
         const docRef = await addDoc(collection(db, 'tests'), {
           author: author,
+          password: password,
           title: title,
           test: test,
-          answer: answer,
+          created_at: serverTimestamp(),
         });
-        alert('새로운 문제를 추가했습니다.');
+
+        const newDocId = docRef.id;
+        alert('글 작성완료');
+        navigate(`/post/${newDocId}`);
       } catch (error) {
-        console.error('문제 추가 실패:', error);
+        console.error('글 작성 실패:', error);
       }
     }
   };
 
   return (
     <div className='flex flex-col space-y-3'>
-      <p className='text-2xl font-bold my-5'>문제 만들기</p>
-      <Input
-        placeholder="만든 이"
-        inputProps={ariaLabel}
-        value={author}
-        onChange={(e) => setauthor(e.target.value)}
-      />
-      <Input
-        placeholder="문제 제목"
-        inputProps={ariaLabel}
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
-      <Input
-        placeholder="문제 내용"
-        inputProps={ariaLabel}
-        value={test}
-        onChange={(e) => setTest(e.target.value)}
-      />
-      <Input
-        placeholder="정답"
-        inputProps={ariaLabel}
-        value={answer}
-        onChange={(e) => setAnswer(e.target.value)}
-      />
+      <table>
+        <tr>
+          <th colSpan="2">
+            글쓰기
+          </th>
+        </tr>
+        <tr>
+            <td width="50">
+                <select>
+                    <option>자유게시판</option>
+                    <option>속보</option>
+                    <option>우정서</option>
+                </select>
+            </td>
+            <td >
+                <input type="text" placeholder="제목을 입력하세요."
+                className='w-full p-2 m-2 border-2'
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                 />
+            </td>
+        </tr>
+        <tr>
+          <td>
+            <input type="text" placeholder="작성자"
+              className='w-full max-w-xl m-2 border-2'
+              value={author}
+              onChange={(e) => setauthor(e.target.value)}
+            />
+          </td>
+          <td >
+            <input placeholder="비밀번호"
+              type="password"
+              className='w-full max-w-xl m-2 border-2'
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </td>
+        </tr>
+        <tr>
+          <td colSpan="2" className='h-[400px]'>
+            <textarea placeholder='내용을 입력하세요.' className='w-full h-full p-2 m-2 border-2 rounded-xl' value={test} onChange={(e) => setTest(e.target.value)}></textarea>
+          </td>
+        </tr>
+      </table>
       <Button variant="contained" onClick={handleAddTest} disabled={isButtonDisabled}>
-        입력
+        글쓰기
       </Button>
     </div>
   );

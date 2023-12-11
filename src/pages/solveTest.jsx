@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -8,96 +8,48 @@ import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import Button from '@mui/material/Button';
-import Input from '@mui/material/Input';
 
-import { getDocs, collection, query } from 'firebase/firestore';
-import Modal from 'react-modal';
-import { initializeApp } from 'firebase/app';
-import { firestore } from 'firebase/firestore';
-import { getFirestore } from 'firebase/firestore';
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDsay0eJbHv-cfJU-J5thQfoHmClrxnJmM",
-  authDomain: "test-875d8.firebaseapp.com",
-  projectId: "test-875d8",
-  storageBucket: "test-875d8.appspot.com",
-  messagingSenderId: "230819283164",
-  appId: "1:230819283164:web:e2ef3e93945fc3c0593419"
-};
-
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
-
-
-Modal.setAppElement('#root'); // 모달이 어디에 렌더링될지 설정
-
-export function CustomModal({ isOpen, onRequestClose }) {
-  return (
-    <Modal
-      isOpen={isOpen}
-      onRequestClose={onRequestClose}
-      contentLabel="문제 모달"
-    >
-      <h2>문제 모달</h2>
-      {/* 모달 내용을 추가하세요 */}
-      <button onClick={onRequestClose}>닫기</button>
-    </Modal>
-  );
-}
+import { getDocs, collection, orderBy, query } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
+import { db } from '../firebase';
 
 const textCollectionRef = collection(db, 'tests');
-
-const columns= [
-  { id: 'number', label: '문제번호', minWidth: 100 },
-  { id: 'title', label: '제목', minWidth: 170 },
-  { id: 'author', label: '문제만든이', minWidth: 170 },
-  { id: 'viewButton', label: '문제보기', minWidth: 170 },
-];
-
-
-function createData(number, title, author, test, answer) {
-  return { number, title, author, test, answer};
-}
 
 export default function StickyHeadTable() {
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
-  const [isModalOpen, setIsModalOpen] = useState(false); // 모달 상태 추가
-  const [selectedData, setSelectedData] = useState(null);
   const [initialData, setInitialData] = useState([]);
+  const navigate = useNavigate();
+
   const fetchData = async () => {
     try {
-      const querySnapshot = await getDocs(textCollectionRef);
+      const q = query(textCollectionRef, orderBy('created_at', 'desc'));
+      const querySnapshot = await getDocs(q);
       const data = [];
-  
+
       querySnapshot.forEach((doc) => {
         const docData = doc.data();
-        // Assuming you have the "test" field inside each document
-        if (docData.test) {
+        const uniqueId = doc.id;
+        if (docData.test && docData.created_at) {
           data.push({
-            number: docData.number,    // Replace with the actual field names
-            title: docData.title,      // Replace with the actual field names
+            uniqueId: uniqueId,
+            password: docData.password,
+            title: docData.title,
             author: docData.author,
             test: docData.test,
-            answer: docData.answer,    // Replace with the actual field names
+            created_at: docData.created_at.toDate(),  // Convert Firestore timestamp to JavaScript Date
           });
         }
       });
-  
-      return data;
+
+      setInitialData(data);
     } catch (error) {
       console.error("데이터 가져오기 실패:", error);
     }
   };
-  
-  
 
   useEffect(() => {
-    fetchData().then((data) => {
-      if (data.length > 0) {
-        setInitialData(data);
-      }
-    });
+    fetchData();
   }, []);
 
   const handleChangePage = (event, newPage) => {
@@ -109,69 +61,51 @@ export default function StickyHeadTable() {
     setPage(0);
   };
 
-  const handleOpenModal = () => {
-    setIsModalOpen(true);
+  const handleViewButtonClick = (row) => {
+    navigate(`/post/${row.uniqueId}`);
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-  };
-
-
-
-  const [answer, setAnswer] = useState("");
-  const ariaLabel = { 'aria-label': 'description' };
-  const checkAnswer = () => {
-    if (answer === selectedData.answer) {
-      alert("정답입니다");
+  const formatDateTime = (date) => {
+    if (date && date.toISOString) {
+      const options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: false };
+      const formattedDate = new Intl.DateTimeFormat('ko-KR', options).format(date);
+      // 분까지만 표시하고 월, 시간, 분은 ':'로 구분된 형식으로 변경
+      const [year, month, day, time] = formattedDate.split(' ');
+      const [hour, minute] = time.split(':');
+      return `${year}${month}${day} ${hour}:${minute}`;
     } else {
-      alert("틀렸습니다");
+      return '유효하지 않은 날짜';
     }
   };
-
-  const seeAnswer = () =>{
-    alert(`${selectedData.answer}`)
-  }
-
 
   return (
     <Paper sx={{ width: '100%', overflow: 'hidden' }}>
       <TableContainer sx={{ maxHeight: 440 }}>
         <Table stickyHeader aria-label="sticky table">
-          <TableHead  style={{ zIndex: 0 }}>
+          <TableHead style={{ zIndex: 0 }}>
             <TableRow>
-              {columns.map((column) => (
-                <TableCell
-                  key={column.id}
-                  align={column.align}
-                  style={{ minWidth: column.minWidth }}
-                >
-                  {column.label}
-                </TableCell>
-              ))}
+              <TableCell style={{ minWidth: 100 }}>작성 날짜</TableCell>
+              <TableCell style={{ minWidth: 170 }}>제목</TableCell>
+              <TableCell style={{ minWidth: 170 }}>글쓴이</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {initialData
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((row) => {
-                return (
-                  <TableRow hover role="checkbox" tabIndex={-1} key={row.code}>
-                    {columns.map((column) => {
-                      const value = row[column.id];
-                      return (
-                        <TableCell key={column.id} align={column.align}>
-                          {column.id === 'viewButton' ? (
-                            <button onClick={() => { handleOpenModal(); setSelectedData(row); console.log(initialData) }}>문제보기</button>
-                          ) : (
-                            column.format && typeof value === 'number' ? column.format(value) : value
-                          )}
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                );
-              })}
+              .map((row) => (
+                <TableRow
+                  hover
+                  role="checkbox"
+                  tabIndex={-1}
+                  key={row.uniqueId}
+                  onClick={() => handleViewButtonClick(row)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <TableCell>{formatDateTime(row.created_at)}</TableCell>
+                  <TableCell>{row.title}</TableCell>
+                  <TableCell>{row.author}</TableCell>
+                </TableRow>
+              ))}
           </TableBody>
         </Table>
       </TableContainer>
@@ -184,38 +118,6 @@ export default function StickyHeadTable() {
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
-        {selectedData && (
-        <Modal
-        isOpen={isModalOpen}
-        onRequestClose={handleCloseModal}
-        contentLabel="문제 모달"
-        style={{
-          overlay: {
-            zIndex: 999
-          },
-          content: {
-            zIndex: 999
-          }
-        }}
-      >
-        <div className='flex flex-col mt-5 space-y-6'>
-          <h2>문제 보기</h2>
-          <p className='text-md font-bold'>문제번호: {selectedData.number}</p>
-          <p className='text-md font-bold'>제목: {selectedData.title}</p>
-          <p className='text-md font-bold'>문제만든이: {selectedData.author}</p>
-          <p className='text-md font-bold'>문제: {selectedData.test}</p>
-          <Input
-            placeholder="정답"
-            inputProps={ariaLabel}
-            value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
-          />
-          <Button variant="outlined" onClick={checkAnswer}>정답입력</Button>
-          <Button variant="outlined" onClick={seeAnswer}>정답보기</Button>
-          <Button variant="contained" onClick={handleCloseModal}>닫기</Button>
-        </div>
-      </Modal>
-      )}
     </Paper>
   );
 }
