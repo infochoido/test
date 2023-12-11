@@ -1,9 +1,129 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
-import { doc, getDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, deleteDoc, addDoc, collection, serverTimestamp, query, where, getDocs, orderBy } from 'firebase/firestore';
 
-export default function PostDetail() {
+const CommentForm = ({ postId }) => {
+    const [content, setContent] = useState('');
+    const [author, setAuthor] = useState('');
+    const [password, setPassword] = useState('');
+  
+    const handleCommentSubmit = async (e) => {
+      e.preventDefault();
+  
+      try {
+        const commentsCollectionRef = collection(db, 'comments');
+        await addDoc(commentsCollectionRef, {
+          content,
+          author,
+          password,
+          postId,
+          createdAt: serverTimestamp(),
+        });
+  
+        setContent('');
+        setAuthor('');
+        setPassword('');
+      } catch (error) {
+        console.error('Error adding comment:', error);
+      }
+    };
+  
+    return (
+      <form onSubmit={handleCommentSubmit} className='flex p-2 space-x-2 border-2'>
+        <label>
+          댓글:
+          <input className="border-2" value={content} onChange={(e) => setContent(e.target.value)} />
+        </label>
+        <label>
+          닉네임:
+          <input className="w-24 border-2" type="text" value={author} onChange={(e) => setAuthor(e.target.value)} />
+        </label>
+        <label>
+          비밀번호:
+          <input className="w-24 border-2" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+        </label>
+        <button type="submit" className='text-white bg-slate-500'>
+          Add Comment
+        </button>
+      </form>
+    );
+  };
+  
+  const CommentList = ({ postId }) => {
+    const [comments, setComments] = useState([]);
+    const [commentPasswords, setCommentPasswords] = useState({});
+  
+    const fetchComments = async () => {
+      try {
+        const commentsQuery = query(collection(db, 'comments'), where('postId', '==', postId), orderBy('createdAt', 'asc'));
+        const querySnapshot = await getDocs(commentsQuery);
+  
+        const commentsData = [];
+        querySnapshot.forEach((doc) => {
+          commentsData.push({ id: doc.id, ...doc.data() });
+        });
+  
+        setComments(commentsData);
+      } catch (error) {
+        console.error('Error fetching comments:', error);
+      }
+    };
+  
+    useEffect(() => {
+      fetchComments();
+    }, [postId]);
+  
+    const handleCommentDelete = async (commentId) => {
+      const password = commentPasswords[commentId];
+  
+      try {
+        const commentRef = doc(db, 'comments', commentId);
+        const commentSnap = await getDoc(commentRef);
+  
+        if (commentSnap.exists()) {
+          const storedPassword = commentSnap.data().password;
+  
+          if (storedPassword === password) {
+            await deleteDoc(commentRef);
+            console.log('댓글이 삭제되었습니다.');
+            alert("댓글이 삭제되었습니다")
+            fetchComments();
+          } else {
+            console.log('비밀번호가 올바르지 않습니다.');
+            alert("비밀번호가 올바르지 않습니다")
+          }
+        }
+      } catch (error) {
+        console.error('Error deleting comment:', error);
+      }
+    };
+  
+    const handlePasswordChange = (e, commentId) => {
+      const newPasswords = { ...commentPasswords, [commentId]: e.target.value };
+      setCommentPasswords(newPasswords);
+    };
+  
+    return (
+      <div>
+        <h2>댓글</h2>
+        {comments.map((comment) => (
+          <div key={comment.id} className="p-2 m-2 border-2">
+            <p>{comment.content}</p>
+            <p>작성자: {comment.author}</p>
+            <label >
+              비밀번호:
+              <input className='border-2' type="password" onChange={(e) => handlePasswordChange(e, comment.id)} />
+            </label>
+            <button className="text-white bg-slate-600" onClick={() => handleCommentDelete(comment.id)}>
+              댓글 삭제
+            </button>
+          </div>
+        ))}
+      </div>
+    );
+  };
+const PostDetail = () => {
   const { postId } = useParams();
   const [postData, setPostData] = useState(null);
   const [passwordInput, setPasswordInput] = useState('');
@@ -73,7 +193,7 @@ export default function PostDetail() {
   return (
     <div>
       {postData ? (
-        <>
+        <div>
           <table>
             <thead>
               <tr className='flex flex-col'>
@@ -84,7 +204,7 @@ export default function PostDetail() {
               </tr>
             </thead>
           </table>
-          <div>
+          <div className='flex'>
             <label>
               비밀번호 입력:
               <input
@@ -94,14 +214,20 @@ export default function PostDetail() {
                 className='m-1 border-2'
               />
             </label>
-          </div>
-          <button onClick={handleDeletePost} className='px-2 text-white bg-slate-600'>
+            <button onClick={handleDeletePost} className='px-2 text-white bg-slate-600'>
             글 삭제
           </button>
-        </>
+          </div>
+          
+          {/* Include the CommentForm component */}
+          <CommentForm postId={postId} />
+          <CommentList postId={postId} />
+        </div>
       ) : (
         <p>Loading...</p>
       )}
     </div>
   );
-}
+};
+
+export default PostDetail;

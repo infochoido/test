@@ -39,7 +39,7 @@ export default function NavigationBar() {
         <StyledBreadcrumb
           component="a"
           href="#"
-          label="Home"
+          label="홈"
           icon={<HomeIcon fontSize="small" />}
         />
         </Link>
