@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase';
 
+const apiKey = "7CF89799250AC03AE28B48673E096DA4";
+
 export default function Remarks() {
   const [words, setWords] = useState([]);
   const [currentWord, setCurrentWord] = useState('');
@@ -32,8 +34,13 @@ export default function Remarks() {
 
     if (validateWord()) {
       try {
-        await addWordToFirestore(currentWord);
-        setError('');
+        const isValid = await checkWordValidity(currentWord);
+        if (isValid) {
+          await addWordToFirestore(currentWord);
+          setError('');
+        } else {
+          setError('사전에 존재하지 않는 단어입니다.');
+        }
       } catch (error) {
         console.error('Firestore에 단어 추가 실패:', error);
         setError('단어를 추가하는 도중 오류가 발생했습니다.');
@@ -53,6 +60,17 @@ export default function Remarks() {
     const currentWordStart = currentWord.charAt(0);
 
     return lastWordEnd === currentWordStart;
+  };
+
+  const checkWordValidity = async (word) => {
+    const response = await fetch(`https://opendict.korean.go.kr/api/search?key=${apiKey}&q=${word}&advanced=y&method=exact`);
+    const data = await response.text();
+    
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(data, "text/xml");
+    const totalNodes = xmlDoc.getElementsByTagName("total")[0].childNodes[0].nodeValue;
+
+    return totalNodes > 0;
   };
 
   const addWordToFirestore = async (word) => {
@@ -93,7 +111,7 @@ export default function Remarks() {
           {words.map((word) => (
             <li key={word.id} className='my-2'>
               {word.word}
-              <button onClick={() => handleDeleteWord(word.id)} className='ml-5 text-black rounded '>
+              <button onClick={() => handleDeleteWord(word.id)} className='ml-5 rounded '>
                 삭제
               </button>
             </li>
