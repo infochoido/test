@@ -75,7 +75,7 @@ export default function MakeTest() {
           </td>
         </tr>
         <tr className='my-2'>
-          <td colSpan="2" className='h-[400px]'>
+          <td colSpan="2" className='h-[300px]'>
             <textarea placeholder='내용을 입력하세요.' className='w-full h-full p-2 my-3 border-2 rounded-xl ' value={test} onChange={(e) => setTest(e.target.value)}></textarea>
           </td>
         </tr>

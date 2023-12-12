@@ -62,15 +62,40 @@ export default function Remarks() {
     return lastWordEnd === currentWordStart;
   };
 
-  const checkWordValidity = async (word) => {
-    const response = await fetch(`https://opendict.korean.go.kr/api/search?key=${apiKey}&q=${word}&advanced=y&method=exact`);
-    const data = await response.text();
-    
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(data, "text/xml");
-    const totalNodes = xmlDoc.getElementsByTagName("total")[0].childNodes[0].nodeValue;
+  const apiEndpoint = process.env.NODE_ENV === 'production'
+  ? 'https://choi-playground.vercel.app/' // 실제 배포된 API 주소
+  : 'http://localhost:3000'; // 로컬 개발 서버 주소
 
-    return totalNodes > 0;
+  const checkWordValidity = async (word) => {
+    try {
+      const response = await fetch(`/api/search?key=${apiKey}&q=${word}&advanced=y&method=exact`, {
+        headers: {
+          'Accept': 'application/xml',
+        },
+      });
+  
+      if (!response.ok) {
+        console.error('응답이 실패했습니다.', response);
+        return false;
+      }
+  
+      const data = await response.text();
+  
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(data, 'application/xml');
+      const totalNodesElement = xmlDoc.getElementsByTagName('total')[0];
+  
+      if (totalNodesElement) {
+        const totalNodes = totalNodesElement.textContent;
+        return totalNodes > 0;
+      } else {
+        console.error('total 노드를 찾을 수 없습니다. XML 데이터 구조를 확인하세요:', xmlDoc);
+        return false; // 또는 다른 적절한 값
+      }
+    } catch (error) {
+      console.error('단어 유효성 확인 오류:', error);
+      throw new Error('단어 유효성 확인 오류');
+    }
   };
 
   const addWordToFirestore = async (word) => {
