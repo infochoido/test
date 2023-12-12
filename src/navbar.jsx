@@ -88,7 +88,7 @@ export default function NavigationBar(){
     <div className='z-40 w-full h-14'>
     <div className='fixed flex items-center w-full pt-3 bg-white space-between'>
       <Drawer />
-      <Link to="/"><p className='text-xl'>준수여친만들기</p></Link>
+      <Link to="/"><p className='text-xl'>최도현 키우기</p></Link>
     </div>
     </div>
   )
