@@ -41,7 +41,6 @@ export default function SimpleBottomNavigation() {
         bottom: 0, // Align to the bottom
         left: 0,
         right: 0,
-        marginBottom: 1,
       }}
     >
       <BottomNavigation

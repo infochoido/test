@@ -76,7 +76,7 @@ export default function StickyHeadTable() {
   return (
     <div className='mt-5 '>
       <p className='my-3 text-2xl'>커뮤니티</p>
-      <table style={{ width: '100%', overflow: 'hidden', maxHeight: '600px', borderSpacing: '0 10px', lineHeight: '1.5' }}>
+      <table style={{ width: '100%', overflow: 'hidden', maxHeight: '500px', borderSpacing: '0 10px', lineHeight: '1.5' }}>
         <thead className='border-b-3'>
           <tr>
             <th style={{ minWidth: '150px', ...cellStyle }} className='text-lg'>제목</th>
@@ -90,7 +90,7 @@ export default function StickyHeadTable() {
               key={row.uniqueId}
               onClick={() => handleViewButtonClick(row)}
               style={{ cursor: 'pointer' }}
-              className='h-10 border-y-2'
+              className='h-8 border-y-2'
             >
               <td style={{ ...cellStyle }}>{row.title}</td>
               <td style={{ ...cellStyle }}>{row.author}</td>
@@ -105,7 +105,7 @@ export default function StickyHeadTable() {
             <Link to="/write" style={{ textDecoration: 'none', color: 'inherit' }}>글쓰기</Link>
           </p>
         </div>
-        <div className='flex items-center justify-center my-2 space-x-4 text-md'>
+        <div className='flex items-center justify-center my-1 space-x-4 text-md'>
           <button onClick={() => handleChangePage(page - 1)} disabled={page === 0}>
             &lt;Prev&gt;
           </button>
