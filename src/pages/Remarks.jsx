@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { collection, addDoc, deleteDoc, doc, getDocs, query, orderBy } from 'firebase/firestore';
+import { collection, addDoc, deleteDoc, doc, getDocs, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 
 export default function Remarks() {
   const [words, setWords] = useState([]);
   const [currentWord, setCurrentWord] = useState('');
   const [error, setError] = useState('');
-  const [isUserEntry, setIsUserEntry] = useState(false); // 추가된 단어가 사용자 입력 여부
-  const maxListSize = 10; // 최대 리스트 크기 설정
 
   const listRef = useRef(null);
 
@@ -15,43 +13,24 @@ export default function Remarks() {
   const fetchWordsFromFirestore = async () => {
     try {
       const wordsCollectionRef = collection(db, 'words');
-      const querySnapshot = await getDocs(query(collection(db, 'words'), orderBy('timestamp', 'asc')));
-    
-      const wordsList = [];
-      querySnapshot.forEach((doc) => {
-        wordsList.push({ id: doc.id, word: doc.data().word, timestamp: doc.data().timestamp });
-      });
-    
+      const querySnapshot = await getDocs(query(wordsCollectionRef, orderBy('timestamp', 'asc')));
+
+      const wordsList = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        word: doc.data().word,
+        timestamp: doc.data().timestamp,
+      }));
+
       setWords(wordsList);
     } catch (error) {
       console.error('단어 목록을 가져오는 도중 오류 발생:', error);
     }
   };
-  
+
   useEffect(() => {
-    // 사용자에게 로딩 중임을 표시하는 코드 (예: 스피너 표시)
-    const loadingIndicator = setTimeout(() => {
-      // 데이터가 로드되면 words 상태 업데이트
-      fetchWordsFromFirestore();
-      clearTimeout(loadingIndicator);
-    }, 500); // 예시로 0.5초 딜레이 설정
+    // 데이터가 로드되면 words 상태 업데이트
+    fetchWordsFromFirestore();
   }, []);
-
-  // useEffect(() => {
-  //   // 사용자가 입력한 단어일 경우 로컬 스토리지에 마지막 입력 정보 저장
-  //   if (isUserEntry) {
-  //     localStorage.setItem('lastUserEntry', JSON.stringify(words));
-  //     setIsUserEntry(false);
-  //   }
-  // }, [words, isUserEntry]);
-
-  // // 로컬 스토리지에서 저장된 사용자 입력 정보 로드
-  // useEffect(() => {
-  //   const lastUserEntry = localStorage.getItem('lastUserEntry');
-  //   if (lastUserEntry) {
-  //     setWords(JSON.parse(lastUserEntry));
-  //   }
-  // }, []);
 
   const handleWordChange = (event) => {
     setCurrentWord(event.target.value);
@@ -59,14 +38,13 @@ export default function Remarks() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-  
+
     if (validateWord()) {
       try {
         const isValid = await checkWordValidity(currentWord);
         if (isValid) {
           await addWordToFirestore(currentWord);
           setError('');
-          // setIsUserEntry(true); // 로컬 스토리지 사용하지 않으므로 주석 처리
         } else {
           setError('사전에 존재하지 않는 단어입니다.');
         }
@@ -96,16 +74,20 @@ export default function Remarks() {
   };
 
   const checkWordValidity = async (word) => {
-    // Simulating word validation, you can replace this with your actual word validation logic
+    // 실제로는 여기에 사전에서 단어를 검증하는 로직을 추가해야 합니다.
+    // 현재는 단어의 길이만을 간단히 검증하고 있습니다.
     return word.length > 0;
   };
 
   const addWordToFirestore = async (word) => {
     try {
       const wordsCollectionRef = collection(db, 'words');
-      const docRef = await addDoc(wordsCollectionRef, { word });
+      const docRef = await addDoc(wordsCollectionRef, {
+        word,
+        timestamp: serverTimestamp(),
+      });
 
-      const updatedWords = [...words, { id: docRef.id, word }];
+      const updatedWords = [...words, { id: docRef.id, word, timestamp: new Date() }];
       setWords(updatedWords);
       setCurrentWord('');
 
@@ -133,31 +115,32 @@ export default function Remarks() {
   return (
     <div>
       <h2 className='my-3 text-2xl'>끝말잇기 게임</h2>
-      
+
       {error && <p style={{ color: 'red' }}>{error}</p>}
       <div ref={listRef} style={{ maxHeight: '450px', overflowY: 'auto' }}>
         <h3>입력된 단어들:</h3>
         <ul className='list-none'>
-            {words.map((word, index) => (
-                <li
-                key={word.id}
-                className={`my-2${index === words.length - 1 ? ' submitted-word' : ''} border-spacing-2 border-2 rounded-lg p-2 ${
-                    index === words.length - 1 ? 'text-right font-black' : ''} ${index !== words.length - 1 ? '' : 'text-green-600'}`}
-                >
-                {word.word}
-                <button onClick={() => handleDeleteWord(word.id)} className='ml-5 text-xs rounded '>
-                    삭제
-                </button>
-                </li>
-            ))}
-            </ul>
+          {words.map((word, index) => (
+            <li
+              key={word.id}
+              className={`my-2${index === words.length - 1 ? ' submitted-word' : ''} border-spacing-2 border-2 rounded-lg p-2 ${
+                index === words.length - 1 ? 'text-right font-black' : ''
+              } ${index !== words.length - 1 ? '' : 'text-green-600'}`}
+            >
+              {word.word}
+              <button onClick={() => handleDeleteWord(word.id)} className='ml-5 text-xs rounded'>
+                삭제
+              </button>
+            </li>
+          ))}
+        </ul>
       </div>
       <form onSubmit={handleSubmit}>
         <label>
           단어 입력:
-          <input type="text" className='p-1 border' value={currentWord} onChange={handleWordChange} />
+          <input type='text' className='p-1 border' value={currentWord} onChange={handleWordChange} />
         </label>
-        <button type="submit">입력</button>
+        <button type='submit'>입력</button>
       </form>
     </div>
   );
