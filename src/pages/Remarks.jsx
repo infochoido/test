@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { collection, addDoc, deleteDoc, doc, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 
@@ -7,6 +7,9 @@ export default function Remarks() {
   const [currentWord, setCurrentWord] = useState('');
   const [error, setError] = useState('');
   const [isUserEntry, setIsUserEntry] = useState(false); // 추가된 단어가 사용자 입력 여부
+  const maxListSize = 10; // 최대 리스트 크기 설정
+
+  const listRef = useRef(null);
 
   // Fetch initial words from Firestore
   const fetchWordsFromFirestore = async () => {
@@ -100,6 +103,11 @@ export default function Remarks() {
       const updatedWords = [...words, { id: docRef.id, word }];
       setWords(updatedWords);
       setCurrentWord('');
+
+      // 스크롤을 항상 최하단으로 이동
+      if (listRef.current) {
+        listRef.current.scrollTop = listRef.current.scrollHeight;
+      }
     } catch (error) {
       console.error('Firestore에 단어 추가 실패:', error);
     }
@@ -122,7 +130,7 @@ export default function Remarks() {
       <h2 className='my-3 text-2xl'>끝말잇기 게임</h2>
       
       {error && <p style={{ color: 'red' }}>{error}</p>}
-      <div>
+      <div ref={listRef} style={{ maxHeight: '450px', overflowY: 'auto' }}>
         <h3>입력된 단어들:</h3>
         <ul className='list-none'>
             {words.map((word, index) => (
