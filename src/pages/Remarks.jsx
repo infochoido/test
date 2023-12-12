@@ -1,8 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
-import { db } from '../firebase';
-
-const apiKey = "7CF89799250AC03AE28B48673E096DA4";
 
 export default function Remarks() {
   const [words, setWords] = useState([]);
@@ -14,15 +10,13 @@ export default function Remarks() {
   }, []);
 
   const fetchWordsFromFirestore = async () => {
-    const wordsCollectionRef = collection(db, 'words');
-    const querySnapshot = await getDocs(wordsCollectionRef);
-
-    const wordsList = [];
-    querySnapshot.forEach((doc) => {
-      wordsList.push({ id: doc.id, word: doc.data().word });
-    });
-
-    setWords(wordsList);
+    try {
+      const response = await fetch('http://localhost:3001/api/words'); // 서버 주소에 맞게 변경
+      const data = await response.json();
+      setWords(data);
+    } catch (error) {
+      console.error('단어 목록을 가져오는 도중 오류 발생:', error);
+    }
   };
 
   const handleWordChange = (event) => {
@@ -62,36 +56,11 @@ export default function Remarks() {
     return lastWordEnd === currentWordStart;
   };
 
-  const apiEndpoint = process.env.NODE_ENV === 'production'
-  ? 'https://choi-playground.vercel.app/' // 실제 배포된 API 주소
-  : 'http://localhost:3000'; // 로컬 개발 서버 주소
-
   const checkWordValidity = async (word) => {
     try {
-      const response = await fetch(`/api/search?key=${apiKey}&q=${word}&advanced=y&method=exact`, {
-        headers: {
-          'Accept': 'application/xml',
-        },
-      });
-  
-      if (!response.ok) {
-        console.error('응답이 실패했습니다.', response);
-        return false;
-      }
-  
-      const data = await response.text();
-  
-      const parser = new DOMParser();
-      const xmlDoc = parser.parseFromString(data, 'application/xml');
-      const totalNodesElement = xmlDoc.getElementsByTagName('total')[0];
-  
-      if (totalNodesElement) {
-        const totalNodes = totalNodesElement.textContent;
-        return totalNodes > 0;
-      } else {
-        console.error('total 노드를 찾을 수 없습니다. XML 데이터 구조를 확인하세요:', xmlDoc);
-        return false; // 또는 다른 적절한 값
-      }
+      const response = await fetch(`http://localhost:3001/api/words/check-validity?word=${word}`); // 서버 주소에 맞게 변경
+      const data = await response.json();
+      return data.isValid;
     } catch (error) {
       console.error('단어 유효성 확인 오류:', error);
       throw new Error('단어 유효성 확인 오류');
@@ -99,23 +68,30 @@ export default function Remarks() {
   };
 
   const addWordToFirestore = async (word) => {
-    const wordsCollectionRef = collection(db, 'words');
-    const docRef = await addDoc(wordsCollectionRef, { word });
-
-    const updatedWords = [...words, { id: docRef.id, word }];
-    setWords(updatedWords);
-    setCurrentWord('');
+    try {
+      const response = await fetch('http://localhost:3001/api/words', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ word }),
+      }); // 서버 주소에 맞게 변경
+      const data = await response.json();
+      setWords((prevWords) => [...prevWords, data]);
+      setCurrentWord('');
+    } catch (error) {
+      console.error('단어를 Firestore에 추가하는 도중 오류 발생:', error);
+    }
   };
 
   const handleDeleteWord = async (id) => {
     try {
-      const wordsCollectionRef = collection(db, 'words');
-      await deleteDoc(doc(wordsCollectionRef, id));
-
-      const updatedWords = words.filter((word) => word.id !== id);
-      setWords(updatedWords);
+      await fetch(`http://localhost:3001/api/words/${id}`, {
+        method: 'DELETE',
+      }); // 서버 주소에 맞게 변경
+      setWords((prevWords) => prevWords.filter((word) => word.id !== id));
     } catch (error) {
-      console.error('Firestore에서 단어 삭제 실패:', error);
+      console.error('단어를 Firestore에서 삭제하는 도중 오류 발생:', error);
     }
   };
 
