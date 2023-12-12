@@ -30,20 +30,20 @@ const CommentForm = ({ postId }) => {
     };
   
     return (
-      <form onSubmit={handleCommentSubmit} className='flex p-2 m-3 space-x-2 border-2'>
-        <label>
-          댓글:
-          <input className="border-2" value={content} onChange={(e) => setContent(e.target.value)} />
-        </label>
-        <label>
-          닉네임:
-          <input className="w-24 border-2" type="text" value={author} onChange={(e) => setAuthor(e.target.value)} />
-        </label>
-        <label>
-          비밀번호:
-          <input className="w-24 border-2" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-        </label>
-        <button type="submit" className='p-1 text-sm text-white bg-slate-500'>
+      <form onSubmit={handleCommentSubmit} className='flex flex-wrap p-1 m-3 space-y-2 border-2 md:space-y-0 md:space-x-1'>
+        <div className='flex-1 mb-2'>
+          <label className='block text-xs'>닉네임:</label>
+          <input className="w-full text-xs border-2 md:text-sm" type="text" value={author} onChange={(e) => setAuthor(e.target.value)} />
+        </div>
+        <div className='w-full mb-2 md:w-1/2 lg:w-1/5'>
+          <label className='block text-xs'>비밀번호:</label>
+          <input className="w-full text-xs border-2 md:text-sm" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+        </div>
+        <div className='flex-1 mb-2'>
+          <label className='block text-xs'>댓글:</label>
+          <input className="w-full text-xs border-2 md:text-sm" value={content} onChange={(e) => setContent(e.target.value)} />
+        </div>
+        <button type="submit" className='w-full p-1 text-xs text-white md:w-auto md:text-sm bg-slate-500'>
           댓글
         </button>
       </form>
@@ -134,15 +134,16 @@ const CommentForm = ({ postId }) => {
           <div key={comment.id} className="p-2 m-3 border-2">
             <p>{comment.content}</p>
             <div className='flex items-center space-x-3'>
-                <p className='text-sm'>작성자: {comment.author}</p>
-                <label className='text-sm'>
+                <p className='text-xs'>작성자: {comment.author}</p>
+                <label className='text-xs'>
                 비밀번호:
                 <input className='border-2' type="password" onChange={(e) => handlePasswordChange(e, comment.id)} />
                 </label>
-                <button className="text-sm text-white bg-slate-500" onClick={() => handleCommentDelete(comment.id)}>
-                댓글 삭제
-                </button>
+                
             </div>
+            <button className="p-1 text-xs text-white bg-slate-500" onClick={() => handleCommentDelete(comment.id)}>
+                댓글 삭제
+            </button>
           </div>
         ))}
       </div>
