@@ -117,7 +117,7 @@ export default function Remarks() {
       <h2 className='my-3 text-2xl'>끝말잇기 게임</h2>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
-      <div ref={listRef} style={{ maxHeight: '450px', overflowY: 'auto' }}>
+      <div ref={listRef} style={{ maxHeight: '385px', overflowY: 'auto' }}>
         <h3>입력된 단어들:</h3>
         <ul className='list-none'>
           {words.map((word, index) => (
