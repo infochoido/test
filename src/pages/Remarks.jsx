@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, getDocs } from 'firebase/firestore';
+import { collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase';
 
 export default function Remarks() {
@@ -17,7 +17,7 @@ export default function Remarks() {
 
     const wordsList = [];
     querySnapshot.forEach((doc) => {
-      wordsList.push(doc.data().word);
+      wordsList.push({ id: doc.id, word: doc.data().word });
     });
 
     setWords(wordsList);
@@ -48,7 +48,7 @@ export default function Remarks() {
       return true; // 첫 단어는 규칙 검사 없이 허용
     }
 
-    const lastWord = words[words.length - 1];
+    const lastWord = words[words.length - 1].word;
     const lastWordEnd = lastWord.charAt(lastWord.length - 1);
     const currentWordStart = currentWord.charAt(0);
 
@@ -57,11 +57,23 @@ export default function Remarks() {
 
   const addWordToFirestore = async (word) => {
     const wordsCollectionRef = collection(db, 'words');
-    await addDoc(wordsCollectionRef, { word });
+    const docRef = await addDoc(wordsCollectionRef, { word });
 
-    const updatedWords = [...words, word];
+    const updatedWords = [...words, { id: docRef.id, word }];
     setWords(updatedWords);
     setCurrentWord('');
+  };
+
+  const handleDeleteWord = async (id) => {
+    try {
+      const wordsCollectionRef = collection(db, 'words');
+      await deleteDoc(doc(wordsCollectionRef, id));
+
+      const updatedWords = words.filter((word) => word.id !== id);
+      setWords(updatedWords);
+    } catch (error) {
+      console.error('Firestore에서 단어 삭제 실패:', error);
+    }
   };
 
   return (
@@ -78,9 +90,12 @@ export default function Remarks() {
       <div>
         <h3>입력된 단어들:</h3>
         <ul>
-          {words.map((word, index) => (
-            <li key={index} style={{ fontWeight: index === words.length - 1 ? 'bold' : 'normal' }} className='my-2'>
-              {word}
+          {words.map((word) => (
+            <li key={word.id} className='my-2'>
+              {word.word}
+              <button onClick={() => handleDeleteWord(word.id)} className='ml-5 text-black rounded '>
+                삭제
+              </button>
             </li>
           ))}
         </ul>
