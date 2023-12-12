@@ -247,7 +247,7 @@ const PostDetail = () => {
                 className='m-1 border-2'
               />
             </label>
-            <button onClick={handleDeletePost} className='px-2 mx-5 text-sm bg-white shadow-sm rounded-xl shadow-black'>
+            <button onClick={handleDeletePost} className='px-2 mx-2 text-sm bg-white shadow-sm w-15 rounded-xl sm:w-10 sm:text-xs shadow-black'>
             글 삭제
           </button>
           </div>

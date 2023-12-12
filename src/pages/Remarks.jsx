@@ -1,23 +1,49 @@
 import React, { useState, useEffect } from 'react';
+import { collection, addDoc, deleteDoc, doc, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
 
 export default function Remarks() {
   const [words, setWords] = useState([]);
   const [currentWord, setCurrentWord] = useState('');
   const [error, setError] = useState('');
+  const [isUserEntry, setIsUserEntry] = useState(false); // 추가된 단어가 사용자 입력 여부
+
+  // Fetch initial words from Firestore
+  const fetchWordsFromFirestore = async () => {
+    try {
+      const wordsCollectionRef = collection(db, 'words');
+      const querySnapshot = await getDocs(wordsCollectionRef);
+
+      const wordsList = [];
+      querySnapshot.forEach((doc) => {
+        wordsList.push({ id: doc.id, word: doc.data().word });
+      });
+
+      setWords(wordsList);
+    } catch (error) {
+      console.error('단어 목록을 가져오는 도중 오류 발생:', error);
+    }
+  };
 
   useEffect(() => {
     fetchWordsFromFirestore();
   }, []);
 
-  const fetchWordsFromFirestore = async () => {
-    try {
-      const response = await fetch('http://localhost:3001/api/words'); // 서버 주소에 맞게 변경
-      const data = await response.json();
-      setWords(data);
-    } catch (error) {
-      console.error('단어 목록을 가져오는 도중 오류 발생:', error);
+  useEffect(() => {
+    // 사용자가 입력한 단어일 경우 로컬 스토리지에 마지막 입력 정보 저장
+    if (isUserEntry) {
+      localStorage.setItem('lastUserEntry', JSON.stringify(words));
+      setIsUserEntry(false);
     }
-  };
+  }, [words, isUserEntry]);
+
+  // 로컬 스토리지에서 저장된 사용자 입력 정보 로드
+  useEffect(() => {
+    const lastUserEntry = localStorage.getItem('lastUserEntry');
+    if (lastUserEntry) {
+      setWords(JSON.parse(lastUserEntry));
+    }
+  }, []);
 
   const handleWordChange = (event) => {
     setCurrentWord(event.target.value);
@@ -32,6 +58,7 @@ export default function Remarks() {
         if (isValid) {
           await addWordToFirestore(currentWord);
           setError('');
+          setIsUserEntry(true);
         } else {
           setError('사전에 존재하지 않는 단어입니다.');
         }
@@ -45,6 +72,10 @@ export default function Remarks() {
   };
 
   const validateWord = () => {
+    if (currentWord.length === 1) {
+      return false; // 한 글자 단어는 규칙에 어긋남
+    }
+
     if (words.length === 0) {
       return true; // 첫 단어는 규칙 검사 없이 허용
     }
@@ -57,47 +88,57 @@ export default function Remarks() {
   };
 
   const checkWordValidity = async (word) => {
-    try {
-      const response = await fetch(`http://localhost:3001/api/words/check-validity?word=${word}`); // 서버 주소에 맞게 변경
-      const data = await response.json();
-      return data.isValid;
-    } catch (error) {
-      console.error('단어 유효성 확인 오류:', error);
-      throw new Error('단어 유효성 확인 오류');
-    }
+    // Simulating word validation, you can replace this with your actual word validation logic
+    return word.length > 0;
   };
 
   const addWordToFirestore = async (word) => {
     try {
-      const response = await fetch('http://localhost:3001/api/words', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ word }),
-      }); // 서버 주소에 맞게 변경
-      const data = await response.json();
-      setWords((prevWords) => [...prevWords, data]);
+      const wordsCollectionRef = collection(db, 'words');
+      const docRef = await addDoc(wordsCollectionRef, { word });
+
+      const updatedWords = [...words, { id: docRef.id, word }];
+      setWords(updatedWords);
       setCurrentWord('');
     } catch (error) {
-      console.error('단어를 Firestore에 추가하는 도중 오류 발생:', error);
+      console.error('Firestore에 단어 추가 실패:', error);
     }
   };
 
   const handleDeleteWord = async (id) => {
     try {
-      await fetch(`http://localhost:3001/api/words/${id}`, {
-        method: 'DELETE',
-      }); // 서버 주소에 맞게 변경
-      setWords((prevWords) => prevWords.filter((word) => word.id !== id));
+      const wordsCollectionRef = collection(db, 'words');
+      await deleteDoc(doc(wordsCollectionRef, id));
+
+      const updatedWords = words.filter((word) => word.id !== id);
+      setWords(updatedWords);
     } catch (error) {
-      console.error('단어를 Firestore에서 삭제하는 도중 오류 발생:', error);
+      console.error('Firestore에서 단어 삭제 실패:', error);
     }
   };
 
   return (
     <div>
       <h2 className='my-3 text-2xl'>끝말잇기 게임</h2>
+      
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      <div>
+        <h3>입력된 단어들:</h3>
+        <ul className='list-none'>
+            {words.map((word, index) => (
+                <li
+                key={word.id}
+                className={`my-2${index === words.length - 1 ? ' submitted-word' : ''} border-spacing-2 border-2 rounded-lg p-2 ${
+                    index === words.length - 1 ? 'text-right font-black' : ''} ${index !== words.length - 1 ? '' : 'text-green-600'}`}
+                >
+                {word.word}
+                <button onClick={() => handleDeleteWord(word.id)} className='ml-5 text-xs rounded '>
+                    삭제
+                </button>
+                </li>
+            ))}
+            </ul>
+      </div>
       <form onSubmit={handleSubmit}>
         <label>
           단어 입력:
@@ -105,20 +146,6 @@ export default function Remarks() {
         </label>
         <button type="submit">입력</button>
       </form>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <div>
-        <h3>입력된 단어들:</h3>
-        <ul>
-          {words.map((word) => (
-            <li key={word.id} className='my-2'>
-              {word.word}
-              <button onClick={() => handleDeleteWord(word.id)} className='ml-5 rounded '>
-                삭제
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
     </div>
   );
 }
