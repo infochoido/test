@@ -51,7 +51,7 @@ export default function MakeTest() {
             </td>
             <td >
                 <input type="text" placeholder="제목을 입력하세요."
-                className='w-full p-2 m-2 border-2'
+                className='w-full p-2 my-2 border-2'
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                  />
@@ -60,7 +60,7 @@ export default function MakeTest() {
         <tr>
           <td>
             <input type="text" placeholder="작성자"
-              className='w-full max-w-xl m-2 border-2'
+              className='w-full max-w-xl p-1 my-2 border-2'
               value={author}
               onChange={(e) => setauthor(e.target.value)}
             />
@@ -68,21 +68,21 @@ export default function MakeTest() {
           <td >
             <input placeholder="비밀번호"
               type="password"
-              className='w-full max-w-xl m-2 border-2'
+              className='w-full max-w-xl p-1 my-2 border-2'
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </td>
         </tr>
-        <tr>
+        <tr className='my-2'>
           <td colSpan="2" className='h-[400px]'>
-            <textarea placeholder='내용을 입력하세요.' className='w-full h-full p-2 m-2 border-2 rounded-xl' value={test} onChange={(e) => setTest(e.target.value)}></textarea>
+            <textarea placeholder='내용을 입력하세요.' className='w-full h-full p-2 my-3 border-2 rounded-xl ' value={test} onChange={(e) => setTest(e.target.value)}></textarea>
           </td>
         </tr>
       </table>
-      <Button variant="contained" onClick={handleAddTest} disabled={isButtonDisabled}>
+      <button variant="contained" className={`m-auto sm:w-10 md:w-20 p-2 rounded-lg text-white ${isButtonDisabled ? "bg-slate-300" : "shadow-2xl bg-slate-500"} `} onClick={handleAddTest} disabled={isButtonDisabled}>
         글쓰기
-      </Button>
+      </button>
     </div>
   );
 }

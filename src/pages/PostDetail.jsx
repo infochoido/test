@@ -30,7 +30,7 @@ const CommentForm = ({ postId }) => {
     };
   
     return (
-      <form onSubmit={handleCommentSubmit} className='flex p-2 space-x-2 border-2'>
+      <form onSubmit={handleCommentSubmit} className='flex p-2 m-3 space-x-2 border-2'>
         <label>
           댓글:
           <input className="border-2" value={content} onChange={(e) => setContent(e.target.value)} />
@@ -43,8 +43,8 @@ const CommentForm = ({ postId }) => {
           비밀번호:
           <input className="w-24 border-2" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
         </label>
-        <button type="submit" className='text-white bg-slate-500'>
-          Add Comment
+        <button type="submit" className='p-1 text-sm text-white bg-slate-500'>
+          댓글
         </button>
       </form>
     );
@@ -128,19 +128,21 @@ const CommentForm = ({ postId }) => {
     };
   
     return (
-      <div>
-        <h2>댓글</h2>
+      <div className='my-5'>
+        <h2>댓글목록</h2>
         {comments.map((comment) => (
-          <div key={comment.id} className="p-2 m-2 border-2">
+          <div key={comment.id} className="p-2 m-3 border-2">
             <p>{comment.content}</p>
-            <p>작성자: {comment.author}</p>
-            <label >
-              비밀번호:
-              <input className='border-2' type="password" onChange={(e) => handlePasswordChange(e, comment.id)} />
-            </label>
-            <button className="text-white bg-slate-600" onClick={() => handleCommentDelete(comment.id)}>
-              댓글 삭제
-            </button>
+            <div className='flex items-center space-x-3'>
+                <p className='text-sm'>작성자: {comment.author}</p>
+                <label className='text-sm'>
+                비밀번호:
+                <input className='border-2' type="password" onChange={(e) => handlePasswordChange(e, comment.id)} />
+                </label>
+                <button className="text-sm text-white bg-slate-500" onClick={() => handleCommentDelete(comment.id)}>
+                댓글 삭제
+                </button>
+            </div>
           </div>
         ))}
       </div>
@@ -228,7 +230,7 @@ const PostDetail = () => {
             </thead>
           </table>
           <div className='flex'>
-            <label>
+            <label className='text-sm'>
               비밀번호 입력:
               <input
                 type="password"
@@ -237,14 +239,19 @@ const PostDetail = () => {
                 className='m-1 border-2'
               />
             </label>
-            <button onClick={handleDeletePost} className='px-2 text-white bg-slate-600'>
+            <button onClick={handleDeletePost} className='px-2 text-sm text-white bg-slate-500'>
             글 삭제
           </button>
           </div>
           
           {/* Include the CommentForm component */}
+          <div className='my-10'>
+          <p>댓글쓰기</p>
           <CommentForm postId={postId} />
+          </div>
+          <div className='my-10'>
           <CommentList postId={postId} />
+          </div>
         </div>
       ) : (
         <p>Loading...</p>

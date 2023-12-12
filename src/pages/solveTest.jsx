@@ -78,15 +78,19 @@ export default function StickyHeadTable() {
     }
   };
 
+  const cellStyle = {
+    fontFamily: 'TheJamsil5Bold, sans-serif', // 'YourCustomFont'에 원하는 폰트 이름을 추가하세요.
+  };
+
   return (
     <Paper sx={{ width: '100%', overflow: 'hidden' }}>
       <TableContainer sx={{ maxHeight: 440 }}>
         <Table stickyHeader aria-label="sticky table">
           <TableHead style={{ zIndex: 0 }}>
             <TableRow>
-              <TableCell style={{ minWidth: 100 }}>작성 날짜</TableCell>
-              <TableCell style={{ minWidth: 170 }}>제목</TableCell>
-              <TableCell style={{ minWidth: 170 }}>글쓴이</TableCell>
+              <TableCell style={{ minWidth: 100, ...cellStyle }}>작성 날짜</TableCell>
+              <TableCell style={{ minWidth: 170, ...cellStyle }}>제목</TableCell>
+              <TableCell style={{ minWidth: 170, ...cellStyle }}>글쓴이</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -101,9 +105,9 @@ export default function StickyHeadTable() {
                   onClick={() => handleViewButtonClick(row)}
                   style={{ cursor: 'pointer' }}
                 >
-                  <TableCell>{formatDateTime(row.created_at)}</TableCell>
-                  <TableCell>{row.title}</TableCell>
-                  <TableCell>{row.author}</TableCell>
+                  <TableCell style={{...cellStyle}}>{formatDateTime(row.created_at)}</TableCell>
+                  <TableCell style={{...cellStyle}}>{row.title}</TableCell>
+                  <TableCell style={{...cellStyle}}>{row.author}</TableCell>
                 </TableRow>
               ))}
           </TableBody>

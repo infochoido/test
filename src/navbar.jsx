@@ -33,24 +33,24 @@ function handleClick(event) {
 
 export default function NavigationBar() {
   return (
-    <div role="presentation" onClick={handleClick} className='z-0'>
-      <Breadcrumbs aria-label="breadcrumb">
+    <div role="presentation" onClick={handleClick} className="z-0 my-4 mx-7 ">
+      <div className="flex items-center space-x-4"> {/* Added items-center for vertical alignment */}
         <Link to={"/"}>
-        <StyledBreadcrumb
-          component="a"
-          href="#"
-          label="홈"
-          icon={<HomeIcon fontSize="small" />}
-        />
+          <p className="text-xl font-black text-black">현우진</p>
         </Link>
-        <Link to="/post">
-        <StyledBreadcrumb component="a" href="#" label="커뮤니티" />
+        <Link to="/post" className="flex-1"> {/* Added flex-1 for the second Link to take remaining space */}
+          <p className="w-full py-2 font-bold text-center bg-slate-300 rounded-xl">커뮤니티</p>
         </Link>
         <Link to="/write">
-        <StyledBreadcrumb component="a" href="#" label="글쓰기" />
+          <p className="w-12 font-black">글쓰기</p>
         </Link>
-        
-      </Breadcrumbs>
+        <Link to="/write">
+          <p className="w-12 font-black">로그인</p>
+        </Link>
+        <Link to="/write">
+          <p className="w-16 font-black">회원가입</p>
+        </Link>
+      </div>
     </div>
   );
 }
