@@ -8,6 +8,7 @@ import Home from './pages/Home';
 import NavigationBar from './navbar';
 import PostDetail from './pages/PostDetail';
 import SimpleBottomNavigation from './MobileBotNavbar';
+import Remarks from './pages/Remarks';
 
 function App() {
 
@@ -20,7 +21,7 @@ function App() {
           <Route path='/post' element={<SolveTestTable />} />
           <Route path='/write' element={<MakeTest />} />
           <Route path="/post/:postId" element={<PostDetail />} />
-          <Route path="/remarks" element={<PostDetail />} />
+          <Route path="/remarks" element={<Remarks />} />
           <Route path="/doto" element={<PostDetail />} />
         </Routes>
         <SimpleBottomNavigation />

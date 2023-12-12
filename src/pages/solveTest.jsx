@@ -109,7 +109,7 @@ export default function StickyHeadTable() {
           <button onClick={() => handleChangePage(page - 1)} disabled={page === 0}>
             &lt;Prev&gt;
           </button>
-          <span className='font-bold'>{page + 1}</span>
+          <span>{page + 1}</span>
           <button onClick={() => handleChangePage(page + 1)} disabled={page === Math.ceil(initialData.length / rowsPerPage) - 1}>
             &lt;Next &gt;
           </button>
