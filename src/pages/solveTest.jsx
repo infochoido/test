@@ -92,8 +92,8 @@ export default function StickyHeadTable() {
               style={{ cursor: 'pointer' }}
               className='h-8 border-y-2'
             >
-              <td style={{ ...cellStyle }}>{row.title}</td>
-              <td style={{ ...cellStyle }}>{row.author}</td>
+              <td style={{ ...cellStyle }} className='text-xs'>{row.title}</td>
+              <td style={{ ...cellStyle }} className='text-xs'>{row.author}</td>
               <td style={{ ...cellStyle }} className='text-xs'>{formatDateTime(row.created_at)}</td>
             </tr>
           ))}
