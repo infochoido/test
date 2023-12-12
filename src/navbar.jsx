@@ -1,56 +1,96 @@
 import * as React from 'react';
-import { emphasize, styled } from '@mui/material/styles';
-import Breadcrumbs from '@mui/material/Breadcrumbs';
-import Chip from '@mui/material/Chip';
-import HomeIcon from '@mui/icons-material/Home';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import Box from '@mui/material/Box';
+import SwipeableDrawer from '@mui/material/SwipeableDrawer';
+import Button from '@mui/material/Button';
+import List from '@mui/material/List';
+import Divider from '@mui/material/Divider';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import InboxIcon from '@mui/icons-material/MoveToInbox';
+import MailIcon from '@mui/icons-material/Mail';
+import MenuIcon from '@mui/icons-material/Menu';
+import { Menu } from '@mui/material';
 import { Link } from 'react-router-dom';
 
-const StyledBreadcrumb = styled(Chip)(({ theme }) => {
-  const backgroundColor =
-    theme.palette.mode === 'light'
-      ? theme.palette.grey[100]
-      : theme.palette.grey[800];
-  return {
-    backgroundColor,
-    height: theme.spacing(3),
-    color: theme.palette.text.primary,
-    fontWeight: theme.typography.fontWeightRegular,
-    '&:hover, &:focus': {
-      backgroundColor: emphasize(backgroundColor, 0.06),
-    },
-    '&:active': {
-      boxShadow: theme.shadows[1],
-      backgroundColor: emphasize(backgroundColor, 0.12),
-    },
+export  function Drawer() {
+  const [state, setState] = React.useState({
+    left: false,
+  });
+
+  const toggleDrawer = (anchor, open) => (event) => {
+    if (
+      event &&
+      event.type === 'keydown' &&
+      (event.key === 'Tab' || event.key === 'Shift')
+    ) {
+      return;
+    }
+
+    setState({ ...state, [anchor]: open });
   };
-}); // TypeScript only: need a type cast here because https://github.com/Microsoft/TypeScript/issues/26591
 
-function handleClick(event) {
-  event.preventDefault();
-  console.info('You clicked a breadcrumb.');
-}
+  const list = (anchor) => (
+    <Box
+      sx={{ width: 250 }}
+      role="presentation"
+      onClick={toggleDrawer(anchor, false)}
+      onKeyDown={toggleDrawer(anchor, false)}
+    >
+      <List>
+        {['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
+          <ListItem key={text} disablePadding>
+            <ListItemButton>
+              <ListItemIcon>
+                {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
+              </ListItemIcon>
+              <ListItemText primary={text} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+      <Divider />
+      <List>
+        {['All mail', 'Trash', 'Spam'].map((text, index) => (
+          <ListItem key={text} disablePadding>
+            <ListItemButton>
+              <ListItemIcon>
+                {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
+              </ListItemIcon>
+              <ListItemText primary={text} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+    </Box>
+  );
 
-export default function NavigationBar() {
   return (
-    <div role="presentation" onClick={handleClick} className="z-0 my-4 mx-7 ">
-      <div className="flex items-center space-x-1">
-        <Link to={"/"}>
-          <p className="text-xl font-black text-black">현우진</p>
-        </Link>
-        <Link to="/post" className="flex-1">
-          <p className="w-full py-2 font-bold text-center bg-slate-300 rounded-xl">커뮤니티</p>
-        </Link>
-        <Link to="/write">
-          <p className="w-12 font-black  md:inline">글쓰기</p>
-        </Link>
-        <Link to="/write">
-          <p className="hidden w-12 font-black md:inline">로그인</p>
-        </Link>
-        <Link to="/write">
-          <p className="hidden w-16 font-black md:inline">회원가입</p>
-        </Link>
-      </div>
+    <div>
+        <React.Fragment key={'left'}>
+          <Button onClick={toggleDrawer('left', true)}><MenuIcon sx={{fontSize: '35px'}} /></Button>
+          <SwipeableDrawer
+            anchor={'left'}
+            open={state['left']}
+            onClose={toggleDrawer('left', false)}
+            onOpen={toggleDrawer('left', true)}
+          >
+            {list('left')}
+          </SwipeableDrawer>
+        </React.Fragment>
     </div>
   );
+}
+
+export default function NavigationBar(){
+  return(
+    <div className='z-40 h-14'>
+    <div className='fixed flex items-center w-full pt-3 bg-white space-between'>
+      <Drawer />
+      <Link to="/"><p className='text-xl'>준수여친만들기</p></Link>
+    </div>
+    </div>
+  )
+
 }

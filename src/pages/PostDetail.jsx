@@ -31,23 +31,26 @@ const CommentForm = ({ postId }) => {
   
     return (
       <form onSubmit={handleCommentSubmit} className='flex flex-wrap p-1 m-3 space-y-2 border-2 md:space-y-0 md:space-x-1'>
-        <div className='flex-1 mb-2'>
-          <label className='block text-xs'>닉네임:</label>
-          <input className="w-full text-xs border-2 md:text-sm" type="text" value={author} onChange={(e) => setAuthor(e.target.value)} />
+        <div className='flex space-x-4'>
+          <div className='mb-2 flex-1/2'>
+            <label className='block text-xs'>닉네임:</label>
+            <input className="w-full text-xs border-2 md:text-sm" type="text" value={author} onChange={(e) => setAuthor(e.target.value)} />
+          </div>
+          <div className='mb-2 flex-1/2'>
+            <label className='block text-xs'>비밀번호:</label>
+            <input className="w-full text-xs border-2 md:text-sm" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          </div>
         </div>
-        <div className='w-full mb-2 md:w-1/2 lg:w-1/5'>
-          <label className='block text-xs'>비밀번호:</label>
-          <input className="w-full text-xs border-2 md:text-sm" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-        </div>
-        <div className='flex-1 mb-2'>
+        <div className='w-full mb-2'> {/* 수정된 부분 */}
           <label className='block text-xs'>댓글:</label>
-          <input className="w-full text-xs border-2 md:text-sm" value={content} onChange={(e) => setContent(e.target.value)} />
+          <input className="w-full py-1 text-xs border-2 md:text-sm" value={content} onChange={(e) => setContent(e.target.value)} />
         </div>
-        <button type="submit" className='w-full p-1 text-xs text-white md:w-auto md:text-sm bg-slate-500'>
+        <button type="submit" className='w-full p-1 text-xs text-white md:w-auto md:text-sm rounded-sm bg-[#004C2F]'>
           댓글
         </button>
       </form>
     );
+    
   };
   
   const CommentList = ({ postId }) => {
@@ -133,15 +136,17 @@ const CommentForm = ({ postId }) => {
         {comments.map((comment) => (
           <div key={comment.id} className="p-2 m-3 border-2">
             <p>{comment.content}</p>
-            <div className='flex items-center space-x-3'>
+            <div className='flex items-center justify-around space-x-3'>
                 <p className='text-xs'>작성자: {comment.author}</p>
-                <label className='text-xs'>
-                비밀번호:
-                <input className='border-2' type="password" onChange={(e) => handlePasswordChange(e, comment.id)} />
-                </label>
+                <div>
+                  <label className='text-xs'>
+                  비밀번호:
+                  <input className='border-2 ' type="password" onChange={(e) => handlePasswordChange(e, comment.id)} />
+                  </label>
+                </div>
                 
             </div>
-            <button className="p-1 text-xs text-white bg-slate-500" onClick={() => handleCommentDelete(comment.id)}>
+            <button className="p-1 text-xs text-white bg-[#004C2F] rounded-sm" onClick={() => handleCommentDelete(comment.id)}>
                 댓글 삭제
             </button>
           </div>
@@ -217,16 +222,18 @@ const PostDetail = () => {
   };
 
   return (
-    <div>
+    <div className='mt-5'>
       {postData ? (
         <div>
-          <table>
+          <table className='w-full'>
             <thead>
-              <tr className='flex flex-col'>
-                <td className='text-2xl font-bold'>{postData.title}</td>
-                <td>작성자 : {postData.author}</td>
-                <td>작성날짜 : {formatDateTime(postData.created_at.toDate())}</td>
-                <td className='w-full p-5 m-2 border-2 rounded-xl'>{postData.test}</td>
+              <tr className='flex flex-col w-full'>
+                <td className='flex items-center'><p className='text-sm font-normal text-gray-400'>제목 :</p>{postData.title}</td>
+                <div className='flex space-x-3'>
+                <td className='flex items-center'><p className='text-sm font-normal text-gray-400'>작성자 :</p> {postData.author}</td>
+                <td className='flex items-center'><p className='text-sm font-normal text-gray-400'>작성날짜 :</p> {formatDateTime(postData.created_at.toDate())}</td>
+                </div>
+                <td className='w-full p-4 my-5 border-2 min-h-[200px] rounded-xl'>{postData.test}</td>
               </tr>
             </thead>
           </table>
@@ -240,7 +247,7 @@ const PostDetail = () => {
                 className='m-1 border-2'
               />
             </label>
-            <button onClick={handleDeletePost} className='px-2 text-sm text-white bg-slate-500'>
+            <button onClick={handleDeletePost} className='px-2 mx-5 text-sm bg-white shadow-sm rounded-xl shadow-black'>
             글 삭제
           </button>
           </div>

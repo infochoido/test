@@ -1,23 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import Paper from '@mui/material/Paper';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TablePagination from '@mui/material/TablePagination';
-import TableRow from '@mui/material/TableRow';
-import Button from '@mui/material/Button';
-
+import { Link, useNavigate } from 'react-router-dom';
 import { getDocs, collection, orderBy, query } from 'firebase/firestore';
-import { useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
 
 const textCollectionRef = collection(db, 'tests');
 
 export default function StickyHeadTable() {
-  const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [initialData, setInitialData] = useState([]);
   const navigate = useNavigate();
 
@@ -37,7 +27,7 @@ export default function StickyHeadTable() {
             title: docData.title,
             author: docData.author,
             test: docData.test,
-            created_at: docData.created_at.toDate(),  // Convert Firestore timestamp to JavaScript Date
+            created_at: docData.created_at.toDate(),
           });
         }
       });
@@ -52,7 +42,7 @@ export default function StickyHeadTable() {
     fetchData();
   }, []);
 
-  const handleChangePage = (event, newPage) => {
+  const handleChangePage = (newPage) => {
     setPage(newPage);
   };
 
@@ -69,7 +59,6 @@ export default function StickyHeadTable() {
     if (date && date.toISOString) {
       const options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: false };
       const formattedDate = new Intl.DateTimeFormat('ko-KR', options).format(date);
-      // 분까지만 표시하고 월, 시간, 분은 ':'로 구분된 형식으로 변경
       const [year, month, day, time] = formattedDate.split(' ');
       const [hour, minute] = time.split(':');
       return `${year}${month}${day} ${hour}:${minute}`;
@@ -79,49 +68,63 @@ export default function StickyHeadTable() {
   };
 
   const cellStyle = {
-    fontFamily: 'TheJamsil5Bold, sans-serif', // 'YourCustomFont'에 원하는 폰트 이름을 추가하세요.
+    fontFamily: 'TheJamsil5Bold, sans-serif',
   };
 
+  const paginatedData = initialData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
   return (
-    <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-      <TableContainer sx={{ maxHeight: 440 }}>
-        <Table stickyHeader aria-label="sticky table">
-          <TableHead style={{ zIndex: 0 }}>
-            <TableRow>
-              <TableCell style={{ minWidth: 100, ...cellStyle }}>작성 날짜</TableCell>
-              <TableCell style={{ minWidth: 170, ...cellStyle }}>제목</TableCell>
-              <TableCell style={{ minWidth: 170, ...cellStyle }}>글쓴이</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {initialData
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((row) => (
-                <TableRow
-                  hover
-                  role="checkbox"
-                  tabIndex={-1}
-                  key={row.uniqueId}
-                  onClick={() => handleViewButtonClick(row)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <TableCell style={{...cellStyle}}>{formatDateTime(row.created_at)}</TableCell>
-                  <TableCell style={{...cellStyle}}>{row.title}</TableCell>
-                  <TableCell style={{...cellStyle}}>{row.author}</TableCell>
-                </TableRow>
-              ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-      <TablePagination
-        rowsPerPageOptions={[10, 25, 100]}
-        component="div"
-        count={initialData.length}
-        rowsPerPage={rowsPerPage}
-        page={page}
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-      />
-    </Paper>
+    <div className='mt-5 '>
+      <p className='my-3 text-2xl'>커뮤니티</p>
+      <table style={{ width: '100%', overflow: 'hidden', maxHeight: '600px', borderSpacing: '0 10px', lineHeight: '1.5' }}>
+        <thead className='border-b-3'>
+          <tr>
+            <th style={{ minWidth: '150px', ...cellStyle }} className='text-lg'>제목</th>
+            <th style={{ minWidth: '80px', ...cellStyle }} className='text-lg'>작성자</th>
+            <th style={{ minWidth: '120px', ...cellStyle }} className='text-lg'>등록일</th>
+          </tr>
+        </thead>
+        <tbody>
+          {paginatedData.map((row) => (
+            <tr
+              key={row.uniqueId}
+              onClick={() => handleViewButtonClick(row)}
+              style={{ cursor: 'pointer' }}
+              className='h-10 border-y-2'
+            >
+              <td style={{ ...cellStyle }}>{row.title}</td>
+              <td style={{ ...cellStyle }}>{row.author}</td>
+              <td style={{ ...cellStyle }} className='text-xs'>{formatDateTime(row.created_at)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div>
+        <div>
+          <p className="w-20 px-1 m-2 mt-4 font-black text-center bg-white shadow-sm rounded-xl shadow-black md:inline">
+            <Link to="/write" style={{ textDecoration: 'none', color: 'inherit' }}>글쓰기</Link>
+          </p>
+        </div>
+        <div className='flex items-center justify-center my-2 space-x-4 text-md'>
+          <button onClick={() => handleChangePage(page - 1)} disabled={page === 0}>
+            &lt;Prev&gt;
+          </button>
+          <span className='font-bold'>{page + 1}</span>
+          <button onClick={() => handleChangePage(page + 1)} disabled={page === Math.ceil(initialData.length / rowsPerPage) - 1}>
+            &lt;Next &gt;
+          </button>
+        </div>
+        <div>
+          <label className='text-sm '>
+            페이지당 글 수:
+            <select value={rowsPerPage} onChange={handleChangeRowsPerPage} >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={100}>100</option>
+            </select>
+          </label>
+        </div>
+      </div>
+    </div>
   );
-}
+  }
