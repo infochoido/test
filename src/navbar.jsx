@@ -85,7 +85,7 @@ export  function Drawer() {
 
 export default function NavigationBar(){
   return(
-    <div className='z-40 h-14'>
+    <div className='z-40 w-full h-14'>
     <div className='fixed flex items-center w-full pt-3 bg-white space-between'>
       <Drawer />
       <Link to="/"><p className='text-xl'>준수여친만들기</p></Link>

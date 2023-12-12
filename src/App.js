@@ -14,7 +14,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <div className="mx-2 App">
+      <div className="mx-2 bg-white App">
         <NavigationBar />
         <Routes>
           <Route path='/' element={<Home />} />
