@@ -34,21 +34,21 @@ function handleClick(event) {
 export default function NavigationBar() {
   return (
     <div role="presentation" onClick={handleClick} className="z-0 my-4 mx-7 ">
-      <div className="flex items-center space-x-4"> {/* Added items-center for vertical alignment */}
+      <div className="flex items-center space-x-1">
         <Link to={"/"}>
           <p className="text-xl font-black text-black">현우진</p>
         </Link>
-        <Link to="/post" className="flex-1"> {/* Added flex-1 for the second Link to take remaining space */}
+        <Link to="/post" className="flex-1">
           <p className="w-full py-2 font-bold text-center bg-slate-300 rounded-xl">커뮤니티</p>
         </Link>
         <Link to="/write">
-          <p className="w-12 font-black">글쓰기</p>
+          <p className="w-12 font-black  md:inline">글쓰기</p>
         </Link>
         <Link to="/write">
-          <p className="w-12 font-black">로그인</p>
+          <p className="hidden w-12 font-black md:inline">로그인</p>
         </Link>
         <Link to="/write">
-          <p className="w-16 font-black">회원가입</p>
+          <p className="hidden w-16 font-black md:inline">회원가입</p>
         </Link>
       </div>
     </div>
