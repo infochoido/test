@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { collection, addDoc, deleteDoc, doc, getDocs } from 'firebase/firestore';
+import { collection, addDoc, deleteDoc, doc, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '../firebase';
 
 export default function Remarks() {
@@ -15,38 +15,43 @@ export default function Remarks() {
   const fetchWordsFromFirestore = async () => {
     try {
       const wordsCollectionRef = collection(db, 'words');
-      const querySnapshot = await getDocs(wordsCollectionRef);
-
+      const querySnapshot = await getDocs(query(collection(db, 'words'), orderBy('timestamp', 'asc')));
+    
       const wordsList = [];
       querySnapshot.forEach((doc) => {
-        wordsList.push({ id: doc.id, word: doc.data().word });
+        wordsList.push({ id: doc.id, word: doc.data().word, timestamp: doc.data().timestamp });
       });
-
+    
       setWords(wordsList);
     } catch (error) {
       console.error('단어 목록을 가져오는 도중 오류 발생:', error);
     }
   };
-
+  
   useEffect(() => {
-    fetchWordsFromFirestore();
+    // 사용자에게 로딩 중임을 표시하는 코드 (예: 스피너 표시)
+    const loadingIndicator = setTimeout(() => {
+      // 데이터가 로드되면 words 상태 업데이트
+      fetchWordsFromFirestore();
+      clearTimeout(loadingIndicator);
+    }, 500); // 예시로 0.5초 딜레이 설정
   }, []);
 
-  useEffect(() => {
-    // 사용자가 입력한 단어일 경우 로컬 스토리지에 마지막 입력 정보 저장
-    if (isUserEntry) {
-      localStorage.setItem('lastUserEntry', JSON.stringify(words));
-      setIsUserEntry(false);
-    }
-  }, [words, isUserEntry]);
+  // useEffect(() => {
+  //   // 사용자가 입력한 단어일 경우 로컬 스토리지에 마지막 입력 정보 저장
+  //   if (isUserEntry) {
+  //     localStorage.setItem('lastUserEntry', JSON.stringify(words));
+  //     setIsUserEntry(false);
+  //   }
+  // }, [words, isUserEntry]);
 
-  // 로컬 스토리지에서 저장된 사용자 입력 정보 로드
-  useEffect(() => {
-    const lastUserEntry = localStorage.getItem('lastUserEntry');
-    if (lastUserEntry) {
-      setWords(JSON.parse(lastUserEntry));
-    }
-  }, []);
+  // // 로컬 스토리지에서 저장된 사용자 입력 정보 로드
+  // useEffect(() => {
+  //   const lastUserEntry = localStorage.getItem('lastUserEntry');
+  //   if (lastUserEntry) {
+  //     setWords(JSON.parse(lastUserEntry));
+  //   }
+  // }, []);
 
   const handleWordChange = (event) => {
     setCurrentWord(event.target.value);
@@ -54,14 +59,14 @@ export default function Remarks() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
+  
     if (validateWord()) {
       try {
         const isValid = await checkWordValidity(currentWord);
         if (isValid) {
           await addWordToFirestore(currentWord);
           setError('');
-          setIsUserEntry(true);
+          // setIsUserEntry(true); // 로컬 스토리지 사용하지 않으므로 주석 처리
         } else {
           setError('사전에 존재하지 않는 단어입니다.');
         }
