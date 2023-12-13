@@ -102,7 +102,7 @@ export  function Drawer({user}) {
               <ListItemText primary={<Typography style={{ fontFamily: 'TheJamsil5Bold' }}>로그아웃</Typography>} />
             </ListItemButton>
           </ListItem>
-          <ListItem key="로그아웃" disablePadding>
+          <ListItem key="마이페이지" disablePadding>
             <ListItemButton onClick={handleMyPageClick}>
               <ListItemIcon>
                 <InboxIcon />

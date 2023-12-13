@@ -41,13 +41,14 @@ const CommentForm = ({ postId }) => {
             <input className="w-full text-xs border-2 md:text-sm" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
         </div>
-        <div className='w-full mb-2'> {/* 수정된 부분 */}
-          <label className='block text-xs'>댓글:</label>
+        <div className='flex items-center w-full mb-2'> {/* 수정된 부분 */}
+          <label className='block w-10 text-xs'>댓글:</label>
           <input className="w-full py-1 text-xs border-2 md:text-sm" value={content} onChange={(e) => setContent(e.target.value)} />
-        </div>
-        <button type="submit" className='w-full p-1 text-xs text-white md:w-auto md:text-sm rounded-sm bg-[#004C2F]'>
+          <button type="submit" className='w-20 p-1 text-xs text-white  md:text-sm rounded-md m-2 bg-[#004C2F]'>
           댓글
-        </button>
+          </button>
+        </div>
+        
       </form>
     );
     
@@ -136,19 +137,21 @@ const CommentForm = ({ postId }) => {
         {comments.map((comment) => (
           <div key={comment.id} className="p-2 m-3 border-2">
             <p>{comment.content}</p>
-            <div className='flex items-center justify-around space-x-3'>
-                <p className='text-xs'>작성자: {comment.author}</p>
-                <div>
-                  <label className='text-xs'>
+            <div className='flex flex-col justify-between'>
+                <p className='w-20 text-xs'>작성자: {comment.author}</p>
+                <div className='flex items-center'>
+                  <label className='w-full text-xs'>
                   비밀번호:
                   <input className='border-2 ' type="password" onChange={(e) => handlePasswordChange(e, comment.id)} />
                   </label>
+                  <button className="w-20 p-1 text-xs text-white bg-[#004C2F] rounded-md" onClick={() => handleCommentDelete(comment.id)}>
+                    댓글 삭제
+                  </button>
                 </div>
                 
+                
             </div>
-            <button className="p-1 text-xs text-white bg-[#004C2F] rounded-sm" onClick={() => handleCommentDelete(comment.id)}>
-                댓글 삭제
-            </button>
+            
           </div>
         ))}
       </div>
@@ -247,9 +250,9 @@ const PostDetail = () => {
                 className='m-1 border-2'
               />
             </label>
-            <button onClick={handleDeletePost} className='px-2 mx-2 text-sm bg-white shadow-sm w-15 rounded-xl sm:w-10 sm:text-xs shadow-black'>
-            글 삭제
-          </button>
+            <button onClick={handleDeletePost} className='w-20 px-1 mx-3 text-sm bg-white shadow-sm rounded-xl sm:w-20 sm:text-xs shadow-black'>
+              글 삭제
+            </button>
           </div>
           
           {/* Include the CommentForm component */}
