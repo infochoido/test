@@ -128,9 +128,8 @@ export default function MyPage() {
         />
       </div>
       <div className="flex flex-col">
-        <button onClick={() => handleUpdateProfile({ name: "새로운 이름" })}>이름 수정</button>
-        <button onClick={() => handleUpdateProfile({ nickname: "새로운 닉네임" })}>닉네임 수정</button>
-        {/* 프로필 사진 업데이트 기능은 추가적인 구현이 필요합니다. */}
+        {/* <button onClick={() => handleUpdateProfile({ name: "새로운 이름" })}>이름 수정</button>
+        <button onClick={() => handleUpdateProfile({ nickname: "새로운 닉네임" })}>닉네임 수정</button> */}
         <input type="file" onChange={(e) => console.log("프로필 사진 업데이트 기능 구현 필요")} />
       </div>
     </div>
