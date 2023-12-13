@@ -6,6 +6,8 @@ import reportWebVitals from './reportWebVitals';
 import { ThemeProvider } from '@emotion/react';
 import { Theme } from "./theme"
 
+import { auth } from './firebase';
+
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

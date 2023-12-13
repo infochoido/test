@@ -36,6 +36,13 @@ export default function Remarks() {
     setCurrentWord(event.target.value);
   };
 
+  useEffect(() => {
+    // 컴포넌트가 마운트되거나 words가 업데이트될 때 스크롤을 최하단으로 이동
+    if (listRef.current) {
+      listRef.current.scrollTop = listRef.current.scrollHeight;
+    }
+  }, [words]);
+
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -117,7 +124,7 @@ export default function Remarks() {
       <h2 className='my-3 text-2xl'>끝말잇기 게임</h2>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
-      <div ref={listRef} style={{ maxHeight: '385px', overflowY: 'auto' }}>
+      <div ref={listRef} style={{ maxHeight: '385px', overflowY: 'auto' }} className='p-2 border-2 border-gray-200 rounded-lg border-spacing-1'>
         <h3>입력된 단어들:</h3>
         <ul className='list-none'>
           {words.map((word, index) => (

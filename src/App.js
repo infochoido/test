@@ -9,6 +9,8 @@ import NavigationBar from './navbar';
 import PostDetail from './pages/PostDetail';
 import SimpleBottomNavigation from './MobileBotNavbar';
 import Remarks from './pages/Remarks';
+import LoginForm from './pages/Login';
+import { Signup } from './pages/SignUp';
 
 function App() {
 
@@ -23,6 +25,8 @@ function App() {
           <Route path="/post/:postId" element={<PostDetail />} />
           <Route path="/remarks" element={<Remarks />} />
           <Route path="/doto" element={<PostDetail />} />
+          <Route path="/login" element={<LoginForm />} />
+          <Route path="/signup" element={<Signup />} />
         </Routes>
         <SimpleBottomNavigation />
       </div>
