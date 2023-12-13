@@ -13,8 +13,8 @@ export default function MakeTest() {
   const [password, setPassword] = useState('');
   const [nickname, setNickname] = useState('');
   const [image, setImage] = useState(null);
-  const [imageFileName, setImageFileName] = useState(''); // Added state to store image file name
-  const [downloadedUrl, setDownloadedUrl] = useState(''); // Corrected state name
+  const [imageFileName, setImageFileName] = useState('');
+  const [downloadedUrl, setDownloadedUrl] = useState('');
 
   const auth = getAuth();
   const isButtonDisabled = !(title && test && (auth.currentUser ? true : password));
@@ -24,12 +24,9 @@ export default function MakeTest() {
   useEffect(() => {
     const currentUser = auth.currentUser;
     if (currentUser) {
-      // 작성자(input)를 지우고 대신에 닉네임으로 설정
       setAuthor(currentUser.displayName);
-      // Recoil 대신에 로컬 state로 닉네임 설정
       setNickname(currentUser.displayName);
 
-      // 사용자 정보를 가져와서 닉네임 설정
       const getUserInfo = async () => {
         try {
           const q = query(collection(db, 'users'), where("email", "==", currentUser.email));
@@ -52,11 +49,8 @@ export default function MakeTest() {
 
   const handleImageUpload = async () => {
     try {
-      // Check if an image is selected
       if (image) {
         console.log('Image selected:', image);
-  
-        // Extracting file name from the uploaded image
         const fileName = image.name;
         setImageFileName(fileName);
   
@@ -66,13 +60,13 @@ export default function MakeTest() {
         const downloadUrl = await getDownloadURL(storageRef);
   
         console.log('Download URL:', downloadUrl);
-        setDownloadedUrl(downloadUrl); // Move this line here
-  
         alert('이미지 업로드 완료');
+        return downloadUrl; // downloadUrl을 리턴
       }
     } catch (error) {
       console.error('이미지 업로드 실패:', error);
       alert('이미지 업로드 실패');
+      return null;
     }
   };
 
@@ -86,7 +80,7 @@ export default function MakeTest() {
         return {
           name: userData.name,
           nickname: userData.nickname,
-          email: userEmail, // Include the email in userInfo
+          email: userEmail,
         };
       } else {
         console.error("해당 이메일을 가진 사용자가 없습니다.");
@@ -102,26 +96,25 @@ export default function MakeTest() {
     if (!isButtonDisabled) {
       try {
         console.log('Image File Name:', imageFileName);
-        
-        // 이미지 업로드 및 downloadUrl 가져오기
-        await handleImageUpload();
   
-        // 글 작성
+        // handleImageUpload의 리턴값을 받음
+        const downloadedUrl = await handleImageUpload();
+  
         const currentUser = auth.currentUser;
         const authorInfo = currentUser ? currentUser.displayName : author;
-  
-        // 이메일을 이용하여 사용자 정보 가져오기
-        const userEmail = currentUser ? currentUser.email : ''; // 혹시모를 null 체크
+        const userEmail = currentUser ? currentUser.email : '';
         const userInfo = await getUserInfoByEmail(userEmail);
-        
-        const db = getFirestore();
-        const docRef = await addDoc(collection(db, 'tests'), {
+  
+        console.log(downloadedUrl); // 이제 downloadUrl이 정상적으로 로깅되어야 합니다.
+  
+        const firestore = getFirestore();
+        const docRef = await addDoc(collection(firestore, 'tests'), {
           author: userInfo ? userInfo.nickname : authorInfo,
           password: password,
           title: title,
           test: test,
           logined: !!userInfo,
-          imageUrl: downloadedUrl, // Firestore에 이미지 파일 이름 포함
+          imageUrl: downloadedUrl,
           created_at: serverTimestamp(),
         });
   
@@ -137,11 +130,9 @@ export default function MakeTest() {
   const handleDefaultAuthor = () => {
     const currentUser = auth.currentUser;
     if (currentUser) {
-      // 작성자(input)를 지우고 대신에 닉네임으로 설정
-      setAuthor(currentUser.displayName); // Assuming display name is used as the nickname
+      setAuthor(currentUser.displayName);
     }
   };
-
   return (
     <div className='flex flex-col mt-3 mb-20 space-y-3'>
       <table>

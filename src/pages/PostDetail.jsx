@@ -254,7 +254,7 @@ const PostDetail = () => {
                       <img
                         src={imageUrl}
                         alt='Uploaded'
-                        style={{ maxWidth: '100%', height: 'auto', objectFit: 'contain' }}
+                        style={{ maxWidth: '40%', height: 'auto', objectFit: 'contain' }}
                       />
                     </div>
                   )}
