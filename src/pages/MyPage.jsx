@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
+import { useRecoilState } from 'recoil';
 import { updateDoc, doc, collection, getDocs, query, where } from 'firebase/firestore';
 import { auth, db, getUser } from '../firebase';
+import { nameState, nicknameState } from "../recoilAtom";
 
 export default function MyPage() {
   const [user, setUser] = useState(null);
@@ -10,6 +12,14 @@ export default function MyPage() {
     email: "",
     profilePicture: "", // 프로필 사진 URL
   });
+
+  const [name, setName] = useRecoilState(nameState);
+  const [nickname, setNickname] = useRecoilState(nicknameState);
+
+  useEffect(() => {
+    setName(userInfo.name);
+    setNickname(userInfo.nickname);
+  }, [userInfo, setName, setNickname]);
 
   useEffect(() => {
     const unsubscribe = getUser((userData) => {

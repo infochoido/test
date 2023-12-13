@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
 import { doc, getDoc, deleteDoc, addDoc, collection, serverTimestamp, query, where, getDocs, orderBy, onSnapshot } from 'firebase/firestore';
+import { getStorage, ref, getDownloadURL } from 'firebase/storage';
 
 const CommentForm = ({ postId }) => {
     const [content, setContent] = useState('');
@@ -162,6 +163,9 @@ const PostDetail = () => {
   const [postData, setPostData] = useState(null);
   const [passwordInput, setPasswordInput] = useState('');
   const [passwordCorrect, setPasswordCorrect] = useState(true);
+  const [imageUrl, setImageUrl] = useState('');
+  const storage = getStorage();
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -169,9 +173,15 @@ const PostDetail = () => {
       try {
         const docRef = doc(db, 'tests', postId);
         const docSnap = await getDoc(docRef);
-
+    
         if (docSnap.exists()) {
           setPostData(docSnap.data());
+    
+          // Check if the post data contains an image URL
+          if (docSnap.data().imageUrl) {
+            // If yes, set the image URL state
+            setImageUrl(docSnap.data().imageUrl);
+          }
         } else {
           console.log('문서가 없습니다');
         }
@@ -236,7 +246,19 @@ const PostDetail = () => {
                 <td className='flex items-center'><p className='text-sm font-normal text-gray-400'>작성자 :</p> {postData.author}</td>
                 <td className='flex items-center'><p className='text-sm font-normal text-gray-400'>작성날짜 :</p> {formatDateTime(postData.created_at.toDate())}</td>
                 </div>
-                <td className='w-full p-4 my-5 border-2 min-h-[200px] rounded-xl'>{postData.test}</td>
+                <td className='w-full p-4 my-5 border-2 min-h-[200px] rounded-xl'>
+                  {postData.test}
+                  {/* Display the uploaded image if the imageUrl state is set */}
+                  {imageUrl && (
+                    <div className='my-5'>
+                      <img
+                        src={imageUrl}
+                        alt='Uploaded'
+                        style={{ maxWidth: '100%', height: 'auto', objectFit: 'contain' }}
+                      />
+                    </div>
+                  )}
+                </td>
               </tr>
             </thead>
           </table>

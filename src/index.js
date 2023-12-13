@@ -5,15 +5,17 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { ThemeProvider } from '@emotion/react';
 import { Theme } from "./theme"
-
+import { RecoilRoot } from 'recoil';
 import { auth } from './firebase';
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
+  <RecoilRoot>
   <ThemeProvider theme={Theme}>
     <App />
   </ThemeProvider>
+  </RecoilRoot>
 );
 
 // If you want to start measuring performance in your app, pass a function
