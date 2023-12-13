@@ -11,11 +11,10 @@ import ListItemText from '@mui/material/ListItemText';
 import InboxIcon from '@mui/icons-material/MoveToInbox';
 import MailIcon from '@mui/icons-material/Mail';
 import MenuIcon from '@mui/icons-material/Menu';
-import { Menu } from '@mui/material';
 import { Link } from 'react-router-dom';
 import {Typography} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { getUser } from './firebase';
+import { auth, getUser } from './firebase';
 import { useState, useEffect } from 'react';
 
 export  function Drawer({user}) {
@@ -51,61 +50,92 @@ export  function Drawer({user}) {
     setState({ ...state, left: false });
   };
 
+  const handleMyPageClick = () => {
+    // Navigate to the "/login" route
+    navigate('/mypage');
+    // Close the drawer
+    setState({ ...state, left: false });
+  };
+
+  const handleLogoutClick = () => {
+    // Perform logout logic here (e.g., Firebase sign-out)
+    // After logout, you can redirect the user to the home page or do other necessary actions
+    // For example, you can use Firebase auth signOut:
+    // auth.signOut();
+    auth.signOut();
+    alert("로그아웃 되었습니다.")
+  };
+
   const list = (anchor) => (
     <Box
-      sx={{ width: 250 }}
-      role="presentation"
-      onClick={toggleDrawer(anchor, false)}
-      onKeyDown={toggleDrawer(anchor, false)}
-    >
-      <List>
-        {['홈', '커뮤니티', '끝말잇기', '도토'].map((text, index) => (
-          <ListItem key={text} disablePadding>
-            <ListItemButton>
-              <ListItemIcon>
-                {index % 2 === 0 ? <InboxIcon /> : <MenuIcon />}
-              </ListItemIcon>
-              <ListItemText primary={<Typography style={{ fontFamily: 'TheJamsil5Bold' }}>{text}</Typography>} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-      <Divider />
-      <List>
-        {user ? (
+    sx={{ width: 250 }}
+    role="presentation"
+    onClick={toggleDrawer(anchor, false)}
+    onKeyDown={toggleDrawer(anchor, false)}
+  >
+    <List>
+      {['홈', '커뮤니티', '끝말잇기', '도토'].map((text, index) => (
+        <ListItem key={text} disablePadding>
+          <ListItemButton>
+            <ListItemIcon>
+              {index % 2 === 0 ? <InboxIcon /> : <MenuIcon />}
+            </ListItemIcon>
+            <ListItemText primary={<Typography style={{ fontFamily: 'TheJamsil5Bold' }}>{text}</Typography>} />
+          </ListItemButton>
+        </ListItem>
+      ))}
+    </List>
+    <Divider />
+    <List>
+      {user ? (
+        <>
           <ListItem key="메일주소" disablePadding>
             <ListItemButton>
-              <ListItemIcon>
-                <InboxIcon />
-              </ListItemIcon>
               <ListItemText primary={<Typography style={{ fontFamily: 'TheJamsil5Bold' }}>{user.email}</Typography>} />
             </ListItemButton>
           </ListItem>
-        ) : (
-          <ListItem key="로그인" disablePadding>
-            <div className='flex flex-col'>
-              <div>
-                <ListItemButton onClick={handleLoginClick}>
-                  <ListItemIcon>
-                    <InboxIcon />
-                  </ListItemIcon>
-                  <ListItemText primary={<Typography style={{ fontFamily: 'TheJamsil5Bold' }}>로그인</Typography>} />
-                </ListItemButton>
-              </div>
-              <div>
-                <ListItemButton onClick={handleSignUpClick}>
-                  <ListItemIcon>
-                    <InboxIcon />
-                  </ListItemIcon>
-                  <ListItemText primary={<Typography style={{ fontFamily: 'TheJamsil5Bold' }}>회원가입</Typography>} />
-                </ListItemButton>
-              </div>
-            </div>
+          <ListItem key="로그아웃" disablePadding>
+            <ListItemButton onClick={handleLogoutClick}>
+              <ListItemIcon>
+                <InboxIcon />
+              </ListItemIcon>
+              <ListItemText primary={<Typography style={{ fontFamily: 'TheJamsil5Bold' }}>로그아웃</Typography>} />
+            </ListItemButton>
           </ListItem>
-        )}
-      </List>
-    </Box>
-  );
+          <ListItem key="로그아웃" disablePadding>
+            <ListItemButton onClick={handleMyPageClick}>
+              <ListItemIcon>
+                <InboxIcon />
+              </ListItemIcon>
+              <ListItemText primary={<Typography style={{ fontFamily: 'TheJamsil5Bold' }}>마이페이지</Typography>} />
+            </ListItemButton>
+          </ListItem>
+        </>
+      ) : (
+        <ListItem key="로그인" disablePadding>
+          <div className='flex flex-col'>
+            <div>
+              <ListItemButton onClick={handleLoginClick}>
+                <ListItemIcon>
+                  <InboxIcon />
+                </ListItemIcon>
+                <ListItemText primary={<Typography style={{ fontFamily: 'TheJamsil5Bold' }}>로그인</Typography>} />
+              </ListItemButton>
+            </div>
+            <div>
+              <ListItemButton onClick={handleSignUpClick}>
+                <ListItemIcon>
+                  <InboxIcon />
+                </ListItemIcon>
+                <ListItemText primary={<Typography style={{ fontFamily: 'TheJamsil5Bold' }}>회원가입</Typography>} />
+              </ListItemButton>
+            </div>
+          </div>
+        </ListItem>
+      )}
+    </List>
+  </Box>
+);
 
   return (
     <div>
@@ -130,7 +160,11 @@ export default function NavigationBar(){
   useEffect(() => {
     const unsubscribe = getUser((user) => {
       setUser(user);
-    })});
+    });
+
+    // Cleanup the subscription when the component unmounts
+    return () => unsubscribe();
+  }, []);
 
 
   return(

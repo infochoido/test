@@ -28,6 +28,7 @@ export const Signup= () => {
             // Call the signupEmail function from your Firebase setup
             const userCredential = await signupEmail(email, password);
             console.log("User signed up:", userCredential.user);
+            alert("회원가입 성공!!")
             navigate("/");
             // You can perform additional actions after successful signup if needed
           } catch (error) {

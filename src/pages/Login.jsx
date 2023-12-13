@@ -20,6 +20,7 @@ const LoginForm = () => {
       // Call the loginEmail function from your Firebase setup
       await loginEmail(email, password);
       console.log("User logged in successfully!");
+      alert("로그인 성공!")
       // You can perform additional actions after successful login if needed
 
       // Redirect to the home page

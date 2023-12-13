@@ -11,6 +11,7 @@ import SimpleBottomNavigation from './MobileBotNavbar';
 import Remarks from './pages/Remarks';
 import LoginForm from './pages/Login';
 import { Signup } from './pages/SignUp';
+import MyPage from './pages/MyPage';
 
 function App() {
 
@@ -27,6 +28,7 @@ function App() {
           <Route path="/doto" element={<PostDetail />} />
           <Route path="/login" element={<LoginForm />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/mypage" element={<MyPage />} />
         </Routes>
         <SimpleBottomNavigation />
       </div>
