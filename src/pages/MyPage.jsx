@@ -1,25 +1,32 @@
 import React, { useState, useEffect } from "react";
-import { useRecoilState } from 'recoil';
-import { updateDoc, doc, collection, getDocs, query, where } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { collection, doc, getDocs, query, where, updateDoc } from 'firebase/firestore';
 import { auth, db, getUser } from '../firebase';
-import { nameState, nicknameState } from "../recoilAtom";
+import { useRecoilState } from "recoil";
+import { userProfileState } from '../recoilAtom';
+
+const loadProfileFromLocalStorage = () => {
+  const profileString = localStorage.getItem("userProfile");
+  if (profileString) {
+    return JSON.parse(profileString);
+  }
+  return null;
+};
+
+const saveProfileToLocalStorage = (profile) => {
+  localStorage.setItem("userProfile", JSON.stringify(profile));
+};
 
 export default function MyPage() {
   const [user, setUser] = useState(null);
-  const [userInfo, setUserInfo] = useState({
+  const [userProfile, setUserProfile] = useRecoilState(userProfileState);
+  const [userInfo, setUserInfo] = useState(loadProfileFromLocalStorage() || {
     name: "",
     nickname: "",
     email: "",
     profilePicture: "", // 프로필 사진 URL
   });
 
-  const [name, setName] = useRecoilState(nameState);
-  const [nickname, setNickname] = useRecoilState(nicknameState);
-
-  useEffect(() => {
-    setName(userInfo.name);
-    setNickname(userInfo.nickname);
-  }, [userInfo, setName, setNickname]);
 
   useEffect(() => {
     const unsubscribe = getUser((userData) => {
@@ -36,9 +43,9 @@ export default function MyPage() {
 
       getUserInfoByEmail(userEmail).then((userInfo) => {
         if (userInfo) {
-          setUserInfo(userInfo);
+          setUserProfile(userInfo);
         } else {
-          setUserInfo({
+          setUserProfile({
             name: "",
             nickname: "",
             email: "",
@@ -47,27 +54,30 @@ export default function MyPage() {
         }
       });
     } else {
-      setUserInfo({
+      setUserProfile({
         name: "",
         nickname: "",
         email: "",
         profilePicture: "",
       });
     }
-  }, [user]);
+  }, [user, setUserProfile]);
 
   const getUserInfoByEmail = async (userEmail) => {
     try {
       const q = query(collection(db, 'users'), where("email", "==", userEmail));
       const querySnapshot = await getDocs(q);
-  
+
       if (!querySnapshot.empty) {
         const userData = querySnapshot.docs[0].data();
-        return {
+        const profileInfo = {
           name: userData.name,
           nickname: userData.nickname,
-          email: userEmail, // Include the email in userInfo
+          email: userEmail,
+          profilePicture: userData.profilePicture || "",
         };
+        saveProfileToLocalStorage(profileInfo);
+        return profileInfo;
       } else {
         console.error("해당 이메일을 가진 사용자가 없습니다.");
         return null;
@@ -77,31 +87,53 @@ export default function MyPage() {
       return null;
     }
   };
+
   
+  const updateProfilePicture = (downloadUrl) => {
+    setUserInfo((prevUserInfo) => ({ ...prevUserInfo, profilePicture: downloadUrl }));
+  };
 
   const handleUpdateProfile = async (updatedData) => {
     try {
       const currentUser = auth.currentUser;
-
+  
       if (currentUser) {
         const userEmail = currentUser.email;
-
+  
         const q = query(collection(db, 'users'), where("email", "==", userEmail));
         const querySnapshot = await getDocs(q);
-
+  
         if (!querySnapshot.empty) {
           const userData = querySnapshot.docs[0].data();
-
           const userId = querySnapshot.docs[0].id;
+  
+          // 프로필 사진이 업데이트된 경우
+          if (updatedData.profilePicture) {
+            const storage = getStorage();
+            const storageRef = ref(storage, `profile_pictures/${userId}`);
+            await uploadBytes(storageRef, updatedData.profilePicture);
+          
+            const downloadUrl = await getDownloadURL(storageRef);
+            console.log("Download URL:", downloadUrl); // 확인을 위해 로그 추가
+          
+            // Firestore에 프로필 사진 URL 업데이트
+            const userDocRef = doc(collection(db, 'users'), userId);
+            await updateDoc(userDocRef, {
+              profilePicture: downloadUrl,
+            });
+          
+            console.log("프로필 사진이 성공적으로 업데이트되었습니다.");
+            updateProfilePicture(downloadUrl);
+          }
+  
+          // 이름과 닉네임 업데이트
           const userDocRef = doc(collection(db, 'users'), userId);
-
           await updateDoc(userDocRef, {
             name: updatedData.name || userData.name,
             nickname: updatedData.nickname || userData.nickname,
           });
-
+  
           console.log("사용자 정보가 성공적으로 업데이트되었습니다.");
-          setUserInfo((prevUserInfo) => ({ ...prevUserInfo, ...updatedData }));
         } else {
           console.error("해당 이메일을 가진 사용자가 없습니다.");
         }
@@ -117,20 +149,27 @@ export default function MyPage() {
     <div>
       <h1>마이페이지</h1>
       <div>
+        <div className="flex flex-col">
+          <img
+            src={userInfo.profilePicture}
+            alt="프로필 사진"
+            style={{ width: "100px", height: "100px", borderRadius: "50%" }}
+            className="border-2 border-black"
+          />
+          <input
+            type="file"
+            onChange={(e) => {
+              const file = e.target.files[0];
+              if (file) {
+                // 프로필 사진이 선택된 경우 handleUpdateProfile 호출
+                handleUpdateProfile({ profilePicture: file });
+              }
+            }}
+          />
+        </div>
         <p>이름: {userInfo.name}</p>
         <p>닉네임: {userInfo.nickname}</p>
         <p>이메일: {userInfo.email}</p>
-        <img
-          src={userInfo.profilePicture}
-          alt="프로필 사진"
-          style={{ width: "100px", height: "100px", borderRadius: "50%" }}
-          className="border-2 border-black"
-        />
-      </div>
-      <div className="flex flex-col">
-        {/* <button onClick={() => handleUpdateProfile({ name: "새로운 이름" })}>이름 수정</button>
-        <button onClick={() => handleUpdateProfile({ nickname: "새로운 닉네임" })}>닉네임 수정</button> */}
-        <input type="file" onChange={(e) => console.log("프로필 사진 업데이트 기능 구현 필요")} />
       </div>
     </div>
   );

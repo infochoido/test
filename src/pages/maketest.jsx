@@ -60,7 +60,6 @@ export default function MakeTest() {
         const downloadUrl = await getDownloadURL(storageRef);
   
         console.log('Download URL:', downloadUrl);
-        alert('이미지 업로드 완료');
         return downloadUrl; // downloadUrl을 리턴
       }
     } catch (error) {
@@ -96,16 +95,13 @@ export default function MakeTest() {
     if (!isButtonDisabled) {
       try {
         console.log('Image File Name:', imageFileName);
-  
-        // handleImageUpload의 리턴값을 받음
-        const downloadedUrl = await handleImageUpload();
+        await handleImageUpload();
   
         const currentUser = auth.currentUser;
         const authorInfo = currentUser ? currentUser.displayName : author;
         const userEmail = currentUser ? currentUser.email : '';
         const userInfo = await getUserInfoByEmail(userEmail);
-  
-        console.log(downloadedUrl); // 이제 downloadUrl이 정상적으로 로깅되어야 합니다.
+        console.log(downloadedUrl); // You should see the URL logged here
   
         const firestore = getFirestore();
         const docRef = await addDoc(collection(firestore, 'tests'), {
@@ -114,7 +110,7 @@ export default function MakeTest() {
           title: title,
           test: test,
           logined: !!userInfo,
-          imageUrl: downloadedUrl,
+          imageUrl: downloadedUrl, // Using the downloadedUrl state
           created_at: serverTimestamp(),
         });
   
