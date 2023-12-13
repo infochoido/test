@@ -271,10 +271,13 @@ const PostDetail = () => {
   const [editedComment, setEditedComment] = useState('');
   const [editedTitle, setEditedTitle] = useState('');
   const [editedContent, setEditedContent] = useState('');
+  const [userProfile] = useRecoilState(userProfileState);
 
   const handleEditPost = () => {
     setEditMode(true);
     setEditedPost(postData.test);
+    setEditedTitle(postData.title);
+    setEditedContent(postData.test);
   };
 
   const handleCancelEdit = () => {
@@ -385,7 +388,8 @@ const PostDetail = () => {
                     <p className='text-sm font-normal text-gray-400'>작성자 :</p> {postData.author}
                   </td>
                   <td className='flex items-center'>
-                    <p className='text-sm font-normal text-gray-400'>작성날짜 :</p> {formatDateTime(postData.created_at.toDate())}
+                    <p className='text-sm font-normal text-gray-400'>작성날짜 :</p>{' '}
+                    {formatDateTime(postData.created_at.toDate())}
                   </td>
                 </div>
                 <td className='w-full p-4 my-5 border-2 min-h-[200px] rounded-xl'>
@@ -412,47 +416,64 @@ const PostDetail = () => {
             </thead>
           </table>
           <div className='flex'>
-            <label className='text-sm'>
-              비밀번호 입력:
-              <input
-                type='password'
-                value={passwordInput}
-                onChange={handlePasswordChange}
-                className='m-1 border-2'
-              />
-            </label>
-            <button
-              onClick={handleDeletePost}
-              className='w-20 px-1 mx-3 text-sm bg-white shadow-sm rounded-xl sm:w-20 sm:text-xs shadow-black'>
-              글 삭제
-            </button>
-          </div>
+  {editMode && (
+    <>
+      <button
+        onClick={handleCancelEdit}
+        className='w-20 px-1 mx-3 text-sm bg-white shadow-sm rounded-xl sm:w-20 sm:text-xs shadow-black'>
+        취소
+      </button>
+      <button
+        onClick={handleSavePost}
+        className='w-20 px-1 mx-3 text-sm bg-white shadow-sm rounded-xl sm:w-20 sm:text-xs shadow-black'>
+        저장
+      </button>
+    </>
+  )}
+  {!editMode && (
+    <>
+      {(userProfile && userProfile.email === postData.email) || postData.logined ? (
+        <>
+          <button
+            onClick={handleEditPost}
+            className='w-20 px-1 mx-3 text-sm bg-white shadow-sm rounded-xl sm:w-20 sm:text-xs shadow-black'>
+            수정
+          </button>
+          <button
+            onClick={handleDeletePost}
+            className='w-20 px-1 mx-3 text-sm bg-white shadow-sm rounded-xl sm:w-20 sm:text-xs shadow-black'>
+            글 삭제
+          </button>
+        </>
+      ) : (
+        <>
+          <label className='text-sm'>
+            비밀번호 입력:
+            <input
+              type='password'
+              value={passwordInput}
+              onChange={handlePasswordChange}
+              className='m-1 border-2'
+            />
+          </label>
+          <button
+            onClick={handleDeletePost}
+            className='w-20 px-1 mx-3 text-sm bg-white shadow-sm rounded-xl sm:w-20 sm:text-xs shadow-black'>
+            글 삭제
+          </button>
+        </>
+      )}
+    </>
+  )}
+</div>
+
           <div className='flex'>
-            {editMode ? (
-              <>
-                <button
-                  onClick={handleCancelEdit}
-                  className='w-20 px-1 mx-3 text-sm bg-white shadow-sm rounded-xl sm:w-20 sm:text-xs shadow-black'>
-                  취소
-                </button>
-                <button
-                  onClick={handleSavePost}
-                  className='w-20 px-1 mx-3 text-sm bg-white shadow-sm rounded-xl sm:w-20 sm:text-xs shadow-black'>
-                  저장
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={handleEditPost}
-                className='w-20 px-1 mx-3 text-sm bg-white shadow-sm rounded-xl sm:w-20 sm:text-xs shadow-black'>
-                수정
-              </button>
+            {!editMode && (
+              <div className='my-10'>
+                <p>댓글쓰기</p>
+                <CommentForm postId={postId} />
+              </div>
             )}
-            {/* ... (other buttons and input fields) */}
-          </div>
-          <div className='my-10'>
-            <p>댓글쓰기</p>
-            <CommentForm postId={postId}  />
           </div>
           <div className='my-10'>
             <CommentList postId={postId} />
@@ -463,6 +484,9 @@ const PostDetail = () => {
       )}
     </div>
   );
+  
+  
+  
 };
 
 export default PostDetail;

@@ -15,6 +15,7 @@ export default function MakeTest() {
   const [image, setImage] = useState(null);
   const [imageFileName, setImageFileName] = useState('');
   const [downloadedUrl, setDownloadedUrl] = useState('');
+  const [email, setEmail] = useState('');
 
   const auth = getAuth();
   const isButtonDisabled = !(title && test && (auth.currentUser ? true : password));
@@ -31,10 +32,11 @@ export default function MakeTest() {
         try {
           const q = query(collection(db, 'users'), where("email", "==", currentUser.email));
           const querySnapshot = await getDocs(q);
-
+      
           if (!querySnapshot.empty) {
             const userData = querySnapshot.docs[0].data();
             setNickname(userData.nickname);
+            setEmail(currentUser.email); // Set the email
           } else {
             console.error("해당 이메일을 가진 사용자가 없습니다.");
           }
@@ -107,6 +109,7 @@ export default function MakeTest() {
         const docRef = await addDoc(collection(firestore, 'tests'), {
           author: userInfo ? userInfo.nickname : authorInfo,
           password: password,
+          email: userEmail,
           title: title,
           test: test,
           logined: !!userInfo,
