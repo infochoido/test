@@ -77,13 +77,13 @@ export const CommentForm = ({ postId }) => {
   };
 
   return (
-    <form onSubmit={handleCommentSubmit} className='flex flex-wrap w-full p-1 m-3 space-y-2 border-2 md:space-y-0 md:space-x-1'>
-      <div className='w-full mb-2 flex-1/2'>
+    <form onSubmit={handleCommentSubmit} className='flex w-[90vw] p-1 m-3 space-y-2 border-2 '>
+      <div className='w-full mb-1'>
         {user && (
           <label className='block text-xs'>닉네임: {user.displayName}</label>
         )}
         {!user && ( 
-          <div className='flex space-x-2'>
+          <div className='flex w-full space-x-2'>
             <div className='mb-2 flex-1/2'>
               <label className='block text-xs'>닉네임:</label>
               <input
