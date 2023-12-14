@@ -96,14 +96,14 @@ export default function MakeTest() {
   const handleAddTest = async () => {
     if (!isButtonDisabled) {
       try {
-        console.log('Image File Name:', imageFileName);
-        await handleImageUpload();
+        const downloadedUrl = await handleImageUpload(); // Wait for handleImageUpload to complete
   
         const currentUser = auth.currentUser;
         const authorInfo = currentUser ? currentUser.nickname : author;
         const userEmail = currentUser ? currentUser.email : '';
         const userInfo = await getUserInfoByEmail(userEmail);
-        console.log(downloadedUrl); // You should see the URL logged here
+        
+        console.log(downloadedUrl); // Now you should see the URL logged here
   
         const firestore = getFirestore();
         const docRef = await addDoc(collection(firestore, 'tests'), {
@@ -113,7 +113,7 @@ export default function MakeTest() {
           title: title,
           test: test,
           logined: !!userInfo,
-          imageUrl: downloadedUrl, // Using the downloadedUrl state
+          imageUrl: downloadedUrl,
           created_at: serverTimestamp(),
         });
   
