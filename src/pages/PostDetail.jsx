@@ -14,11 +14,13 @@ import {
   orderBy,
   onSnapshot,
 } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
+import { connectStorageEmulator, getStorage } from 'firebase/storage';
 import { userProfileState } from '../recoilAtom';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { updateDoc } from 'firebase/firestore';
 import { getUser } from '../firebase';
+import { getAuth } from 'firebase/auth';
+
 
 export const CommentForm = ({ postId }) => {
   const [content, setContent] = useState('');
@@ -53,6 +55,8 @@ export const CommentForm = ({ postId }) => {
           postId,
           createdAt: serverTimestamp(),
           //authorProfilePicture: user.profilePicture,
+          uid: user.uid,
+          email: user.email
         });
 
         setContent('');
@@ -118,7 +122,6 @@ export const CommentForm = ({ postId }) => {
   );
 }
 
-
 export const CommentList = ({ postId }) => {
   const [comments, setComments] = useState([]);
   const [commentPasswords, setCommentPasswords] = useState({});
@@ -133,19 +136,17 @@ export const CommentList = ({ postId }) => {
       const querySnapshot = await getDocs(commentsQuery);
 
       const commentsData = [];
-      const profilePictures = {};
 
       querySnapshot.forEach((doc) => {
         const commentData = { id: doc.id, ...doc.data() };
         commentsData.push(commentData);
 
-        if (commentData.author && commentData.authorProfilePicture) {
-          profilePictures[commentData.author] = commentData.authorProfilePicture;
+        if (commentData.email) {
+          fetchUserData(commentData.email); // Pass the user's email to fetchUserData
         }
       });
 
       setComments(commentsData);
-      setUserProfilePictures(profilePictures);
     } catch (error) {
       console.error('댓글을 불러오는 중 오류 발생:', error);
     }
@@ -157,14 +158,15 @@ export const CommentList = ({ postId }) => {
 
     const unsubscribe = onSnapshot(commentsQuery, (snapshot) => {
       const commentsData = [];
-      const profilePictures = {};
+      const profilePictures = { ...userProfilePictures };
 
       snapshot.forEach((doc) => {
         const commentData = { id: doc.id, ...doc.data() };
         commentsData.push(commentData);
+        console.log(commentData)
 
-        if (commentData.author && commentData.authorProfilePicture) {
-          profilePictures[commentData.author] = commentData.authorProfilePicture;
+        if (commentData.email) {
+          fetchUserProfile(commentData.email); // Fetch user profile when not already fetched
         }
       });
 
@@ -179,6 +181,38 @@ export const CommentList = ({ postId }) => {
     const user = auth.currentUser;
     if (user) {
       setCurrentUserNickname(user.nickname);
+    }
+  };
+
+  const fetchUserProfile = async (email) => {
+    try {
+      const usersCollectionRef = collection(db, 'users');
+      const usersQuery = query(usersCollectionRef, where('email', '==', email));
+      const usersSnapshot = await getDocs(usersQuery);
+  
+      if (!usersSnapshot.empty) {
+        const userDoc = usersSnapshot.docs[0];
+        const userData = userDoc.data();
+        setUserProfilePictures((prev) => ({ ...prev, [userData.email]: userData.photoURL }));
+      }
+    } catch (error) {
+      console.error(`Error fetching user profile for email ${email}:`, error);
+    }
+  };
+
+  const fetchUserData = async (email) => {
+    try {
+      const usersCollectionRef = collection(db, 'users');
+      const usersQuery = query(usersCollectionRef, where('email', '==', email));
+      const usersSnapshot = await getDocs(usersQuery);
+
+      if (!usersSnapshot.empty) {
+        const userDoc = usersSnapshot.docs[0];
+        const userData = userDoc.data();
+        fetchUserProfile(userData.uid); // Fetch user profile based on UID
+      }
+    } catch (error) {
+      console.error(`Error fetching user data for email ${email}:`, error);
     }
   };
 
@@ -227,9 +261,9 @@ export const CommentList = ({ postId }) => {
           <p>{comment.content}</p>
           <div className='flex flex-col justify-between'>
             <div className='flex items-center'>
-              {comment.author && userProfilePictures[comment.author] && (
+              {comment.email && userProfilePictures[comment.email] && (
                 <img
-                  src={userProfilePictures[comment.author]}
+                  src={userProfilePictures[comment.email]}
                   alt='프로필'
                   style={{ width: '20px', height: '20px', borderRadius: '50%', marginRight: '8px' }}
                 />
@@ -251,7 +285,6 @@ export const CommentList = ({ postId }) => {
     </div>
   );
 };
-
 
 
 const PostDetail = () => {
