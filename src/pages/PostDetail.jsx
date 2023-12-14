@@ -27,14 +27,12 @@ export const CommentForm = ({ postId }) => {
   const [password, setPassword] = useState('');
   const [nickname, setNickname] = useState('');
 
-  const [userProfile, setUserProfile] = useRecoilState(userProfileState);
-
   const [user, setUser] = useState(null);
 
   useEffect(() => {
     const unsubscribe = getUser((userData) => {
       console.log("User data from getUser:", userData);
-      setUser(userData);
+      setUser(userData && userData.email ? userData : null);
     });
 
     return () => unsubscribe();
@@ -79,8 +77,8 @@ export const CommentForm = ({ postId }) => {
   };
 
   return (
-    <form onSubmit={handleCommentSubmit} className='flex flex-wrap p-1 m-3 space-y-2 border-2 md:space-y-0 md:space-x-1'>
-      <div className='mb-2 flex-1/2'>
+    <form onSubmit={handleCommentSubmit} className='flex flex-wrap w-full p-1 m-3 space-y-2 border-2 md:space-y-0 md:space-x-1'>
+      <div className='w-full mb-2 flex-1/2'>
         {user && (
           <label className='block text-xs'>닉네임: {user.displayName}</label>
         )}
@@ -127,8 +125,17 @@ export const CommentList = ({ postId }) => {
   const [commentPasswords, setCommentPasswords] = useState({});
   const [userProfilePictures, setUserProfilePictures] = useState({});
   const [currentUserNickname, setCurrentUserNickname] = useState('');
+  const [user, setUser] = useState(null);
 
-  const userProfile = useRecoilValue(userProfileState);
+  useEffect(() => {
+    const unsubscribe = getUser((userData) => {
+      console.log("User data from getUser:", userData);
+      setUser(userData && userData.email ? userData : null);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
 
   const fetchComments = async () => {
     try {
@@ -163,7 +170,6 @@ export const CommentList = ({ postId }) => {
       snapshot.forEach((doc) => {
         const commentData = { id: doc.id, ...doc.data() };
         commentsData.push(commentData);
-        console.log(commentData)
 
         if (commentData.email) {
           fetchUserProfile(commentData.email); // Fetch user profile when not already fetched
@@ -235,7 +241,6 @@ export const CommentList = ({ postId }) => {
 
         if (storedPassword === password) {
           await deleteDoc(commentRef);
-          console.log('댓글이 삭제되었습니다.');
           alert('댓글이 삭제되었습니다');
           // No need to fetch comments again here; it will be updated through the snapshot listener
         } else {
@@ -254,7 +259,7 @@ export const CommentList = ({ postId }) => {
   };
 
   return (
-    <div className='my-5'>
+    <div className='my-2 mb-40 '>
       <h2>댓글목록</h2>
       {comments.map((comment) => (
         <div key={comment.id} className='p-2 m-3 border-2'>
@@ -270,16 +275,31 @@ export const CommentList = ({ postId }) => {
               )}
               <p className='text-xs'>작성자: {comment.author}</p>
             </div>
-            <div className='flex items-center'>
-              <label className='text-xs'>
-                비밀번호:
-                <input className='border-2' type='password' onChange={(e) => handlePasswordChange(e, comment.id)} />
-              </label>
-              <button className='p-1 text-xs text-white rounded-md bg-[#004C2F]' onClick={() => handleCommentDelete(comment.id)}>
-                댓글 삭제
-              </button>
-            </div>
+            
+            {
+  /* 아래 부분 수정 */
+  (user && comment.email === user.email) ? (
+    <div className='flex items-center'>
+      <button className='p-1 text-xs text-white rounded-md bg-[#004C2F]' onClick={() => handleCommentDelete(comment.id)}>
+        댓글 삭제
+      </button>
+    </div>
+  ) : (
+    (!user && !comment.email) ? (
+      <div className='flex items-center'>
+        <label className='text-xs'>
+          비밀번호:
+          <input className='border-2' type='password' onChange={(e) => handlePasswordChange(e, comment.id)} />
+        </label>
+        <button className='p-1 text-xs text-white rounded-md bg-[#004C2F]' onClick={() => handleCommentDelete(comment.id)}>
+          댓글 삭제
+        </button>
+      </div>
+    ) : null
+  )
+}
           </div>
+            
         </div>
       ))}
     </div>
@@ -302,7 +322,7 @@ const PostDetail = () => {
   useEffect(() => {
     const unsubscribe = getUser((userData) => {
       console.log("User data from getUser:", userData);
-      setUser(userData);
+      setUser(userData && userData.email ? userData : null);
     });
 
     return () => unsubscribe();
@@ -491,7 +511,7 @@ const PostDetail = () => {
           <div className='flex items-center'>
             {!editMode && (
               <>
-                {postData.logined &&  user.email === postData.email ? (
+                {postData.logined && user && user.email === postData.email ? (
                   <>
                     <button
                       onClick={handleEditPost}
