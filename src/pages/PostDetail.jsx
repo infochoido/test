@@ -82,12 +82,12 @@ export const CommentForm = ({ postId }) => {
         {user && (
           <label className='block text-xs'>닉네임: {user.displayName}</label>
         )}
-        {!user && (
-          <>
+        {!user && ( 
+          <div className='flex space-x-2'>
             <div className='mb-2 flex-1/2'>
               <label className='block text-xs'>닉네임:</label>
               <input
-                className='w-full py-1 text-xs border-2 md:text-sm'
+                className='w-full px-1 text-xs border-2 md:text-sm'
                 type='text'
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
@@ -96,18 +96,18 @@ export const CommentForm = ({ postId }) => {
             <div className='mb-2 flex-1/2'>
               <label className='block text-xs'>비밀번호:</label>
               <input
-                className='w-full py-1 text-xs border-2 md:text-sm'
+                className='w-full px-1 text-xs border-2 md:text-sm'
                 type='password'
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-          </>
+          </div>
         )}
-      <div className='flex items-center w-full mb-2'>
+      <div className='flex items-center w-full'>
         <label className='block w-10 text-xs'>댓글:</label>
         <input
-          className='w-full py-1 text-xs border-2 md:text-sm'
+          className='w-full p-1 text-xs border-2 md:text-sm'
           value={content}
           onChange={(e) => setContent(e.target.value)}
         />
@@ -262,36 +262,42 @@ export const CommentList = ({ postId }) => {
     <div className='my-2 mb-40 '>
       <h2>댓글목록</h2>
       {comments.map((comment) => (
-        <div key={comment.id} className='p-2 m-3 border-2'>
-          <p>{comment.content}</p>
-          <div className='flex flex-col justify-between'>
-            <div className='flex items-center'>
+        <div key={comment.id} className='flex p-2 m-3 border-2'>
+          <div className='flex items-center'>
               {comment.email && userProfilePictures[comment.email] && (
                 <img
                   src={userProfilePictures[comment.email]}
                   alt='프로필'
-                  style={{ width: '20px', height: '20px', borderRadius: '50%', marginRight: '8px' }}
+                  style={{borderRadius: '50%', marginRight: '8px' }}
+                  className='w-10 h-10'
                 />
               )}
+
+              <div className='flex flex-col'>
               <p className='text-xs'>작성자: {comment.author}</p>
-            </div>
+              <p>{comment.content}</p>
+              </div>
             
-            {
+          </div>
+          <div className='flex flex-col justify-between'>
+            
+            
+          {
   /* 아래 부분 수정 */
   (user && comment.email === user.email) ? (
-    <div className='flex items-center'>
-      <button className='p-1 text-xs text-white rounded-md bg-[#004C2F]' onClick={() => handleCommentDelete(comment.id)}>
+    <div className='flex items-center ml-8'>
+      <button className='text-xs text-gray-400 rounded-md ' onClick={() => handleCommentDelete(comment.id)}>
         댓글 삭제
       </button>
     </div>
   ) : (
     (!user && !comment.email) ? (
-      <div className='flex items-center'>
+      <div className='flex items-center ml-10'>
         <label className='text-xs'>
           비밀번호:
           <input className='border-2' type='password' onChange={(e) => handlePasswordChange(e, comment.id)} />
         </label>
-        <button className='p-1 text-xs text-white rounded-md bg-[#004C2F]' onClick={() => handleCommentDelete(comment.id)}>
+        <button className='p-1 text-xs text-gray-400 rounded-md ' onClick={() => handleCommentDelete(comment.id)}>
           댓글 삭제
         </button>
       </div>
@@ -568,13 +574,13 @@ const PostDetail = () => {
 
           <div className='flex'>
             {!editMode && (
-              <div className='my-10'>
+              <div className='my-4'>
                 <p>댓글쓰기</p>
                 <CommentForm postId={postId} />
               </div>
             )}
           </div>
-          <div className='my-10'>
+          <div className='my-4'>
             <CommentList postId={postId} />
           </div>
         </div>
