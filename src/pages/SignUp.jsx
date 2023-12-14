@@ -13,6 +13,7 @@ import Paper from '@mui/material/Paper';
 import { signupEmail } from "../firebase";
 import { db } from "../firebase";
 import { addDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { updateProfile } from "firebase/auth";
 
 export const Signup = () => {
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ export const Signup = () => {
       }, 2300); // 2초 후에 숨김
       return;
     }
-
+  
     if (password !== passwordConfirm) {
       setAlertMessage("비밀번호와 확인이 일치하지 않습니다.");
       setShowAlert(true);
@@ -47,45 +48,37 @@ export const Signup = () => {
       }, 2300); // 2초 후에 숨김
       return;
     }
-
+  
     try {
-
-        const nicknameQuery = query(collection(db, 'users'), where('nickname', '==', nickname));
-    const nicknameSnapshot = await getDocs(nicknameQuery);
-
-    if (!nicknameSnapshot.empty) {
-      setAlertMessage("이미 사용 중인 닉네임입니다.");
-      setShowAlert(true);
-      setTimeout(() => {
-        setShowAlert(false);
-      }, 2300); // 2초 후에 숨김
-      return;
-    }
-
-      // Firebase Firestore에 추가로 유저 정보 저장
       const userCredential = await signupEmail(email, password);
       const user = userCredential.user;
-     
+  
+      // Firebase Authentication의 display name 업데이트
+      await updateProfile(user, {
+        displayName: nickname, // 사용자의 닉네임을 displayName에 저장
+      });
+  
+      // Firebase Firestore에 추가로 유저 정보 저장
       const userDocRef = await addDoc(collection(db, 'users'), {
         name: name,
-        nickname : nickname,
-        email : email,
+        nickname: nickname,
+        email: email,
       });
-
+  
       console.log("User signed up:", user);
       alert("회원가입 성공!!");
       navigate("/");
       // 추가로 필요한 작업이 있다면 여기에서 수행
     } catch (error) {
-        if (error.code === 'auth/email-already-in-use') {
-            setAlertMessage("이미 사용 중인 이메일입니다.");
-            setShowAlert(true);
-            setTimeout(() => {
-              setShowAlert(false);
-            }, 2300); // 2초 후에 숨김
-          } else {
-            console.error("회원가입 오류:", error.message);
-          }
+      if (error.code === 'auth/email-already-in-use') {
+        setAlertMessage("이미 사용 중인 이메일입니다.");
+        setShowAlert(true);
+        setTimeout(() => {
+          setShowAlert(false);
+        }, 2300); // 2초 후에 숨김
+      } else {
+        console.error("회원가입 오류:", error.message);
+      }
     }
   };
 

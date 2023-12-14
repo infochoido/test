@@ -4,6 +4,7 @@ import { collection, doc, getDocs, query, where, updateDoc } from 'firebase/fire
 import { auth, db, getUser } from '../firebase';
 import { useRecoilState } from "recoil";
 import { userProfileState } from '../recoilAtom';
+import { updateProfile } from "firebase/auth";
 
 const loadProfileFromLocalStorage = () => {
   const profileString = localStorage.getItem("userProfile");
@@ -98,58 +99,66 @@ export default function MyPage() {
 }, [userProfile]);
 
 
-  const handleUpdateProfile = async (updatedData) => {
-    try {
-      const currentUser = auth.currentUser;
-  
-      if (currentUser) {
-        const userEmail = currentUser.email;
-  
-        const q = query(collection(db, 'users'), where("email", "==", userEmail));
-        const querySnapshot = await getDocs(q);
-  
-        if (!querySnapshot.empty) {
-          const userData = querySnapshot.docs[0].data();
-          const userId = querySnapshot.docs[0].id;
-  
-          // 프로필 사진이 업데이트된 경우
-          if (updatedData.profilePicture) {
-            const storage = getStorage();
-            const storageRef = ref(storage, `profile_pictures/${userId}`);
-            await uploadBytes(storageRef, updatedData.profilePicture);
-          
-            const downloadUrl = await getDownloadURL(storageRef);
-            console.log("Download URL:", downloadUrl); // 확인을 위해 로그 추가
-          
-            // Firestore에 프로필 사진 URL 업데이트
-            const userDocRef = doc(collection(db, 'users'), userId);
-            await updateDoc(userDocRef, {
-              profilePicture: downloadUrl,
-            });
-          
-            console.log("프로필 사진이 성공적으로 업데이트되었습니다.");
-            updateProfilePicture(downloadUrl);
-          }
-  
-          // 이름과 닉네임 업데이트
+const handleUpdateProfile = async (updatedData) => {
+  try {
+    const currentUser = auth.currentUser;
+
+    if (currentUser) {
+      const userEmail = currentUser.email;
+
+      const q = query(collection(db, 'users'), where("email", "==", userEmail));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const userData = querySnapshot.docs[0].data();
+        const userId = querySnapshot.docs[0].id;
+
+        // 프로필 사진이 업데이트된 경우
+        if (updatedData.profilePicture) {
+          const storage = getStorage();
+          const storageRef = ref(storage, `profile_pictures/${userId}`);
+          await uploadBytes(storageRef, updatedData.profilePicture);
+
+          const downloadUrl = await getDownloadURL(storageRef);
+          console.log("Download URL:", downloadUrl);
+
+          // Firestore에 프로필 사진 URL 업데이트
           const userDocRef = doc(collection(db, 'users'), userId);
           await updateDoc(userDocRef, {
-            name: updatedData.name || userData.name,
-            nickname: updatedData.nickname || userData.nickname,
+            profilePicture: downloadUrl,
+            // 추가: photoURL 업데이트
+            photoURL: downloadUrl,
           });
-  
-          console.log("사용자 정보가 성공적으로 업데이트되었습니다.");
-        } else {
-          console.error("해당 이메일을 가진 사용자가 없습니다.");
-        }
-      } else {
-        console.error("사용자 정보를 업데이트할 수 없습니다. 사용자가 로그인되어 있지 않습니다.");
-      }
-    } catch (error) {
-      console.error("사용자 정보 업데이트 중 오류가 발생했습니다:", error.message);
-    }
-  };
 
+          console.log("프로필 사진이 성공적으로 업데이트되었습니다.");
+          updateProfilePicture(downloadUrl);
+
+          // Update the user's photoURL in the auth object
+          await updateProfile(auth.currentUser, {
+            photoURL: downloadUrl,
+          });
+
+          console.log("auth.photoURL이 성공적으로 업데이트되었습니다.");
+        }
+
+        // 이름과 닉네임 업데이트
+        const userDocRef = doc(collection(db, 'users'), userId);
+        await updateDoc(userDocRef, {
+          name: updatedData.name || userData.name,
+          nickname: updatedData.nickname || userData.nickname,
+        });
+
+        console.log("사용자 정보가 성공적으로 업데이트되었습니다.");
+      } else {
+        console.error("해당 이메일을 가진 사용자가 없습니다.");
+      }
+    } else {
+      console.error("사용자 정보를 업데이트할 수 없습니다. 사용자가 로그인되어 있지 않습니다.");
+    }
+  } catch (error) {
+    console.error("사용자 정보 업데이트 중 오류가 발생했습니다:", error.message);
+  }
+};
   return (
     <div>
       <h1>마이페이지</h1>

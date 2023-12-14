@@ -27,10 +27,16 @@ export const CommentForm = ({ postId }) => {
 
   const [userProfile, setUserProfile] = useRecoilState(userProfileState);
 
-  useEffect(()=>{
-    console.log("userProfile", userProfile)
+  const [user, setUser] = useState(null);
 
-  },[])
+  useEffect(() => {
+    const unsubscribe = getUser((userData) => {
+      console.log("User data from getUser:", userData);
+      setUser(userData);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
@@ -38,11 +44,12 @@ export const CommentForm = ({ postId }) => {
     try {
       const commentsCollectionRef = collection(db, 'comments');
       const user = auth.currentUser;
+      console.log('user 저장', user)
 
       if (user) {
         await addDoc(commentsCollectionRef, {
           content,
-          author: userProfile.nickname,
+          author: user.displayName,
           postId,
           createdAt: serverTimestamp(),
           //authorProfilePicture: user.profilePicture,
@@ -70,10 +77,10 @@ export const CommentForm = ({ postId }) => {
   return (
     <form onSubmit={handleCommentSubmit} className='flex flex-wrap p-1 m-3 space-y-2 border-2 md:space-y-0 md:space-x-1'>
       <div className='mb-2 flex-1/2'>
-        {userProfile && (
-          <label className='block text-xs'>닉네임: {userProfile.nickname}</label>
+        {user && (
+          <label className='block text-xs'>닉네임: {user.displayName}</label>
         )}
-        {!userProfile && (
+        {!user && (
           <>
             <div className='mb-2 flex-1/2'>
               <label className='block text-xs'>닉네임:</label>
@@ -343,7 +350,7 @@ const PostDetail = () => {
       if (docSnap.exists()) {
         const storedPassword = docSnap.data().password;
 
-        if (postData.logined && userProfile && userProfile.email) {
+        if (postData.logined && user && user.email) {
           // If logined and user is the owner, no need for password
           await deleteDoc(docRef);
           alert('글이 삭제되었습니다.');
