@@ -8,4 +8,4 @@ export const userProfileState = atom({
       email: '',
       profilePicture: '',
     },
-  });
+});

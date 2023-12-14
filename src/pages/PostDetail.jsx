@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { db } from '../firebase';
+import { db, auth } from '../firebase';
 import {
   doc,
   getDoc,
@@ -15,10 +15,10 @@ import {
   onSnapshot,
 } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
-import { auth } from '../firebase';
 import { userProfileState } from '../recoilAtom';
-import { useRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import { updateDoc } from 'firebase/firestore';
+import { getUser } from '../firebase';
 
 export const CommentForm = ({ postId }) => {
   const [content, setContent] = useState('');
@@ -29,15 +29,20 @@ export const CommentForm = ({ postId }) => {
   const [userProfile, setUserProfile] = useRecoilState(userProfileState);
 
   useEffect(() => {
-    const user = auth.currentUser;
-
-    if (user) {
-      setUserProfile({
-        displayName: user.displayName,
-        photoURL: user.photoURL,
-      });
-    }
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        setUserProfile({
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+        });
+      } else {
+        // Handle the case when the user is not signed in
+        setUserProfile(null);
+      }
+    });
+    return () => unsubscribe(); // Cleanup the subscription when the component unmounts
   }, [setUserProfile]);
+
 
   useEffect(() => {
     if (userProfile) {
@@ -133,13 +138,13 @@ export const CommentForm = ({ postId }) => {
 };
 
 
-const CommentList = ({ postId }) => {
+export const CommentList = ({ postId }) => {
   const [comments, setComments] = useState([]);
   const [commentPasswords, setCommentPasswords] = useState({});
   const [userProfilePictures, setUserProfilePictures] = useState({});
   const [currentUserNickname, setCurrentUserNickname] = useState('');
 
-  const [userProfile] = useRecoilState(userProfileState);
+  const userProfile = useRecoilValue(userProfileState);
 
   const fetchComments = async () => {
     try {
@@ -147,11 +152,19 @@ const CommentList = ({ postId }) => {
       const querySnapshot = await getDocs(commentsQuery);
 
       const commentsData = [];
+      const profilePictures = {};
+
       querySnapshot.forEach((doc) => {
-        commentsData.push({ id: doc.id, ...doc.data() });
+        const commentData = { id: doc.id, ...doc.data() };
+        commentsData.push(commentData);
+
+        if (commentData.author && commentData.authorProfilePicture) {
+          profilePictures[commentData.author] = commentData.authorProfilePicture;
+        }
       });
 
       setComments(commentsData);
+      setUserProfilePictures(profilePictures);
     } catch (error) {
       console.error('댓글을 불러오는 중 오류 발생:', error);
     }
@@ -209,7 +222,7 @@ const CommentList = ({ postId }) => {
           await deleteDoc(commentRef);
           console.log('댓글이 삭제되었습니다.');
           alert('댓글이 삭제되었습니다');
-          fetchComments();
+          // No need to fetch comments again here; it will be updated through the snapshot listener
         } else {
           console.log('비밀번호가 올바르지 않습니다.');
           alert('비밀번호가 올바르지 않습니다');
@@ -258,31 +271,45 @@ const CommentList = ({ postId }) => {
   );
 };
 
+
+
 const PostDetail = () => {
   const { postId } = useParams();
   const [postData, setPostData] = useState(null);
   const [passwordInput, setPasswordInput] = useState('');
-  const [passwordCorrect, setPasswordCorrect] = useState(true);
   const [imageUrl, setImageUrl] = useState('');
-  const storage = getStorage();
   const navigate = useNavigate();
   const [editMode, setEditMode] = useState(false);
-  const [editedPost, setEditedPost] = useState('');
-  const [editedComment, setEditedComment] = useState('');
   const [editedTitle, setEditedTitle] = useState('');
   const [editedContent, setEditedContent] = useState('');
-  const [userProfile] = useRecoilState(userProfileState);
+  const [userProfile, setUserProfile] = useRecoilState(userProfileState);
 
   const handleEditPost = () => {
-    setEditMode(true);
-    setEditedPost(postData.test);
-    setEditedTitle(postData.title);
-    setEditedContent(postData.test);
+    // 사용자가 로그인했고, 프로필 정보와 포스트 정보가 존재하며, 이메일이 일치하거나 비밀번호가 맞다면
+    if (
+      (postData.logined && userProfile && userProfile.email === postData.email) ||
+      (!postData.logined && passwordInput === postData.password)
+    ) {
+      // 수정 모드로 전환
+      setEditMode(true);
+      // 기존 제목과 내용을 상태에 저장
+      setEditedTitle(postData.title);
+      setEditedContent(postData.test);
+    } else {
+      // 권한이 없을 경우 사용자에게 알림
+      alert('비밀번호가 올바르지 않습니다');
+    }
   };
+
+  useEffect(() => {
+    if (userProfile && postData) {
+      console.log(userProfile);
+      console.log(postData);
+    }
+  }, [userProfile, postData]);
 
   const handleCancelEdit = () => {
     setEditMode(false);
-    setEditedPost('');
   };
 
   const handleSavePost = async () => {
@@ -324,23 +351,24 @@ const PostDetail = () => {
 
   const handleDeletePost = async () => {
     try {
-      if (passwordCorrect) {
-        const docRef = doc(db, 'tests', postId);
-        const docSnap = await getDoc(docRef);
+      const docRef = doc(db, 'tests', postId);
+      const docSnap = await getDoc(docRef);
 
-        if (docSnap.exists()) {
-          const storedPassword = docSnap.data().password;
+      if (docSnap.exists()) {
+        const storedPassword = docSnap.data().password;
 
-          if (storedPassword === passwordInput) {
-            await deleteDoc(docRef);
-            alert('글이 삭제되었습니다.');
-            navigate('/');
-          } else {
-            alert('비밀번호가 올바르지 않습니다.');
-          }
+        if (postData.logined && userProfile && userProfile.email) {
+          // If logined and user is the owner, no need for password
+          await deleteDoc(docRef);
+          alert('글이 삭제되었습니다.');
+          navigate('/');
+        } else if (storedPassword === passwordInput) {
+          await deleteDoc(docRef);
+          alert('글이 삭제되었습니다.');
+          navigate('/');
+        } else {
+          alert('비밀번호가 올바르지 않습니다.');
         }
-      } else {
-        alert('비밀번호가 올바르지 않습니다.');
       }
     } catch (error) {
       console.error('Error deleting document:', error);
@@ -362,6 +390,23 @@ const PostDetail = () => {
       return '유효하지 않은 날짜';
     }
   };
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        setUserProfile({
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          email: user.email,
+          // Add other relevant user information
+        });
+      } else {
+        setUserProfile(null);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [setUserProfile]);
 
   return (
     <div className='mt-5'>
@@ -400,7 +445,7 @@ const PostDetail = () => {
                       className='w-full border-2'
                     />
                   ) : (
-                    postData.test
+                    postData && postData.test
                   )}
                   {imageUrl && (
                     <div className='my-5'>
@@ -415,57 +460,63 @@ const PostDetail = () => {
               </tr>
             </thead>
           </table>
-          <div className='flex'>
-  {editMode && (
-    <>
-      <button
-        onClick={handleCancelEdit}
-        className='w-20 px-1 mx-3 text-sm bg-white shadow-sm rounded-xl sm:w-20 sm:text-xs shadow-black'>
-        취소
-      </button>
-      <button
-        onClick={handleSavePost}
-        className='w-20 px-1 mx-3 text-sm bg-white shadow-sm rounded-xl sm:w-20 sm:text-xs shadow-black'>
-        저장
-      </button>
-    </>
-  )}
-  {!editMode && (
-    <>
-      {(userProfile && userProfile.email === postData.email) || postData.logined ? (
-        <>
-          <button
-            onClick={handleEditPost}
-            className='w-20 px-1 mx-3 text-sm bg-white shadow-sm rounded-xl sm:w-20 sm:text-xs shadow-black'>
-            수정
-          </button>
-          <button
-            onClick={handleDeletePost}
-            className='w-20 px-1 mx-3 text-sm bg-white shadow-sm rounded-xl sm:w-20 sm:text-xs shadow-black'>
-            글 삭제
-          </button>
-        </>
-      ) : (
-        <>
-          <label className='text-sm'>
-            비밀번호 입력:
-            <input
-              type='password'
-              value={passwordInput}
-              onChange={handlePasswordChange}
-              className='m-1 border-2'
-            />
-          </label>
-          <button
-            onClick={handleDeletePost}
-            className='w-20 px-1 mx-3 text-sm bg-white shadow-sm rounded-xl sm:w-20 sm:text-xs shadow-black'>
-            글 삭제
-          </button>
-        </>
-      )}
-    </>
-  )}
-</div>
+          <div className='flex items-center'>
+            {!editMode && (
+              <>
+                {postData.logined && userProfile && userProfile.email === postData.email ? (
+                  <>
+                    <button
+                      onClick={handleEditPost}
+                      className='w-20 px-1 mx-3 text-sm bg-white shadow-sm rounded-xl sm:w-20 sm:text-xs shadow-black'>
+                      수정
+                    </button>
+                    <button
+                      onClick={handleDeletePost}
+                      className='w-20 px-1 mx-3 text-sm bg-white shadow-sm rounded-xl sm:w-20 sm:text-xs shadow-black'>
+                      글 삭제
+                    </button>
+                  </>
+                ) : null}
+                {!postData.logined && (
+                  <div className='flex items-center'>
+                    <label className='text-sm'>
+                      비밀번호 입력:
+                      <input
+                        type='password'
+                        value={passwordInput}
+                        onChange={handlePasswordChange}
+                        className='m-1 border-2'
+                      />
+                    </label>
+                    <button
+                      onClick={() => handleEditPost()} // Trigger edit mode directly
+                      className='w-16 h-8 px-1 mx-3 text-sm bg-white shadow-sm rounded-xl sm:text-xs shadow-black'>
+                      수정
+                    </button>
+                    <button
+                      onClick={handleDeletePost}
+                      className='w-16 h-8 px-1 mx-3 text-sm bg-white shadow-sm rounded-xl sm:text-xs shadow-black'>
+                      글 삭제
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+            {editMode && (
+              <div className='flex items-center'>
+                <button
+                  onClick={handleSavePost}
+                  className='w-16 h-8 px-1 mx-3 text-sm bg-white shadow-sm rounded-xl sm:text-xs shadow-black'>
+                  저장
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  className='w-16 h-8 px-1 mx-3 text-sm bg-white shadow-sm rounded-xl sm:text-xs shadow-black'>
+                  취소
+                </button>
+              </div>
+            )}
+          </div>
 
           <div className='flex'>
             {!editMode && (
@@ -484,9 +535,6 @@ const PostDetail = () => {
       )}
     </div>
   );
-  
-  
-  
 };
 
 export default PostDetail;

@@ -93,6 +93,11 @@ export default function MyPage() {
     setUserInfo((prevUserInfo) => ({ ...prevUserInfo, profilePicture: downloadUrl }));
   };
 
+  useEffect(() => {
+    console.log("Updated UserProfile:", userProfile);
+}, [userProfile]);
+
+
   const handleUpdateProfile = async (updatedData) => {
     try {
       const currentUser = auth.currentUser;
