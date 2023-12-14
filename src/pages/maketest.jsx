@@ -25,8 +25,8 @@ export default function MakeTest() {
   useEffect(() => {
     const currentUser = auth.currentUser;
     if (currentUser) {
-      setAuthor(currentUser.displayName);
-      setNickname(currentUser.displayName);
+      setAuthor(currentUser.nickname);
+      setNickname(currentUser.nickname);
 
       const getUserInfo = async () => {
         try {
@@ -100,7 +100,7 @@ export default function MakeTest() {
         await handleImageUpload();
   
         const currentUser = auth.currentUser;
-        const authorInfo = currentUser ? currentUser.displayName : author;
+        const authorInfo = currentUser ? currentUser.nickname : author;
         const userEmail = currentUser ? currentUser.email : '';
         const userInfo = await getUserInfoByEmail(userEmail);
         console.log(downloadedUrl); // You should see the URL logged here
@@ -129,7 +129,7 @@ export default function MakeTest() {
   const handleDefaultAuthor = () => {
     const currentUser = auth.currentUser;
     if (currentUser) {
-      setAuthor(currentUser.displayName);
+      setAuthor(currentUser.nickname);
     }
   };
   return (

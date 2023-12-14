@@ -22,34 +22,15 @@ import { getUser } from '../firebase';
 
 export const CommentForm = ({ postId }) => {
   const [content, setContent] = useState('');
-  const [userProfilePicture, setUserProfilePicture] = useState('');
   const [password, setPassword] = useState('');
   const [nickname, setNickname] = useState('');
 
   const [userProfile, setUserProfile] = useRecoilState(userProfileState);
 
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) {
-        setUserProfile({
-          displayName: user.displayName,
-          photoURL: user.photoURL,
-        });
-      } else {
-        // Handle the case when the user is not signed in
-        setUserProfile(null);
-      }
-    });
-    return () => unsubscribe(); // Cleanup the subscription when the component unmounts
-  }, [setUserProfile]);
+  useEffect(()=>{
+    console.log("userProfile", userProfile)
 
-
-  useEffect(() => {
-    if (userProfile) {
-      setUserProfilePicture(userProfile.photoURL);
-      setNickname(userProfile.displayName);
-    }
-  }, [userProfile]);
+  },[])
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
@@ -61,15 +42,15 @@ export const CommentForm = ({ postId }) => {
       if (user) {
         await addDoc(commentsCollectionRef, {
           content,
-          author: user.displayName,
+          author: userProfile.nickname,
           postId,
           createdAt: serverTimestamp(),
-          authorProfilePicture: user.photoURL,
+          //authorProfilePicture: user.profilePicture,
         });
 
         setContent('');
       } else {
-        // When user is not logged in, include password and nickname fields
+        // When the user is not logged in, include password and nickname fields
         await addDoc(commentsCollectionRef, {
           content,
           author: nickname,
@@ -90,38 +71,30 @@ export const CommentForm = ({ postId }) => {
     <form onSubmit={handleCommentSubmit} className='flex flex-wrap p-1 m-3 space-y-2 border-2 md:space-y-0 md:space-x-1'>
       <div className='mb-2 flex-1/2'>
         {userProfile && (
-          <label className='block text-xs'>닉네임: {userProfile.displayName}</label>
+          <label className='block text-xs'>닉네임: {userProfile.nickname}</label>
         )}
-        {userProfilePicture && userProfile && (
-          <img
-            src={userProfilePicture}
-            alt='프로필'
-            style={{ width: '20px', height: '20px', borderRadius: '50%', marginLeft: '8px' }}
-          />
+        {!userProfile && (
+          <>
+            <div className='mb-2 flex-1/2'>
+              <label className='block text-xs'>닉네임:</label>
+              <input
+                className='w-full py-1 text-xs border-2 md:text-sm'
+                type='text'
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+              />
+            </div>
+            <div className='mb-2 flex-1/2'>
+              <label className='block text-xs'>비밀번호:</label>
+              <input
+                className='w-full py-1 text-xs border-2 md:text-sm'
+                type='password'
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+          </>
         )}
-      </div>
-      {!userProfile && ( // Show password and nickname input only when user is not logged in
-        <>
-          <div className='mb-2 flex-1/2'>
-            <label className='block text-xs'>닉네임:</label>
-            <input
-              className='w-full py-1 text-xs border-2 md:text-sm'
-              type='text'
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-            />
-          </div>
-          <div className='mb-2 flex-1/2'>
-            <label className='block text-xs'>비밀번호:</label>
-            <input
-              className='w-full py-1 text-xs border-2 md:text-sm'
-              type='password'
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-        </>
-      )}
       <div className='flex items-center w-full mb-2'>
         <label className='block w-10 text-xs'>댓글:</label>
         <input
@@ -133,9 +106,10 @@ export const CommentForm = ({ postId }) => {
           댓글
         </button>
       </div>
+      </div>
     </form>
   );
-};
+}
 
 
 export const CommentList = ({ postId }) => {
@@ -197,7 +171,7 @@ export const CommentList = ({ postId }) => {
   const fetchCurrentUserNickname = () => {
     const user = auth.currentUser;
     if (user) {
-      setCurrentUserNickname(user.displayName);
+      setCurrentUserNickname(user.nickname);
     }
   };
 
@@ -283,6 +257,18 @@ const PostDetail = () => {
   const [editedTitle, setEditedTitle] = useState('');
   const [editedContent, setEditedContent] = useState('');
   const [userProfile, setUserProfile] = useRecoilState(userProfileState);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = getUser((userData) => {
+      console.log("User data from getUser:", userData);
+      setUser(userData);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  
 
   const handleEditPost = () => {
     // 사용자가 로그인했고, 프로필 정보와 포스트 정보가 존재하며, 이메일이 일치하거나 비밀번호가 맞다면
@@ -391,22 +377,24 @@ const PostDetail = () => {
     }
   };
 
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) {
-        setUserProfile({
-          displayName: user.displayName,
-          photoURL: user.photoURL,
-          email: user.email,
-          // Add other relevant user information
-        });
-      } else {
-        setUserProfile(null);
-      }
-    });
+  // useEffect(() => {
+  //   const unsubscribe = auth.onAuthStateChanged((user) => {
+  //     if (user) {
+  //       setUserProfile({
+  //         nickname: userProfile.nickname,
+  //         name : userProfile.name,
+  //         photoURL: userProfile.profilePicture,
+  //         email: user.email,
+  //         // Add other relevant user information
+  //       });
+  //       console.log("유저", userProfile)
+  //     } else {
+  //       setUserProfile(null);
+  //     }
+  //   });
 
-    return () => unsubscribe();
-  }, [setUserProfile]);
+  //   return () => unsubscribe();
+  // }, [setUserProfile]);
 
   return (
     <div className='mt-5'>
@@ -463,7 +451,7 @@ const PostDetail = () => {
           <div className='flex items-center'>
             {!editMode && (
               <>
-                {postData.logined && userProfile && userProfile.email === postData.email ? (
+                {postData.logined &&  user.email === postData.email ? (
                   <>
                     <button
                       onClick={handleEditPost}
