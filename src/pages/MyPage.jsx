@@ -160,17 +160,21 @@ const handleUpdateProfile = async (updatedData) => {
   }
 };
   return (
-    <div>
-      <h1>마이페이지</h1>
-      <div>
+    <div className="w-full mt-4">
+      <div className="p-2 m-auto border-2">
+      <h1 className="mb-4 text-2xl">마이페이지</h1>
+      <div className="flex flex-col space-y-6">
+        
         <div className="flex flex-col">
+        <p>프로필 사진</p>
           <img
             src={userInfo.profilePicture}
             alt="프로필 사진"
-            style={{ width: "100px", height: "100px", borderRadius: "50%" }}
+            style={{ width: "150px", height: "150px", borderRadius: "50%" }}
             className="border-2 border-black"
           />
           <input
+          className="mt-2 text-xs"
             type="file"
             onChange={(e) => {
               const file = e.target.files[0];
@@ -184,6 +188,7 @@ const handleUpdateProfile = async (updatedData) => {
         <p>이름: {userInfo.name}</p>
         <p>닉네임: {userInfo.nickname}</p>
         <p>이메일: {userInfo.email}</p>
+      </div>
       </div>
     </div>
   );

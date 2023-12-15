@@ -63,6 +63,8 @@ export default function MakeTest() {
   
         console.log('Download URL:', downloadUrl);
         return downloadUrl; // downloadUrl을 리턴
+      } else{
+        return null;
       }
     } catch (error) {
       console.error('이미지 업로드 실패:', error);
