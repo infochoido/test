@@ -24,7 +24,8 @@ export default function MyPage() {
     name: "",
     nickname: "",
     email: "",
-    profilePicture: "", // 프로필 사진 URL
+    profilePicture: "",
+    coins: 0, // 프로필 사진 URL
   });
 
   const [editMode, setEditMode] = useState(false);
@@ -54,6 +55,7 @@ export default function MyPage() {
             nickname: "",
             email: "",
             profilePicture: "",
+            coins: 0,
           });
         }
       });
@@ -63,6 +65,7 @@ export default function MyPage() {
         nickname: "",
         email: "",
         profilePicture: "",
+        coins: 0,
       });
     }
   }, [user, setUserProfile]);
@@ -79,6 +82,7 @@ export default function MyPage() {
           nickname: userData.nickname,
           email: userEmail,
           profilePicture: userData.profilePicture || "",
+          coins: userData.coins,
         };
         saveProfileToLocalStorage(profileInfo);
         return profileInfo;
@@ -264,6 +268,7 @@ return (
             )}
           </p>
           <p>이메일: {userInfo.email}</p>
+          <p>코인개수: {userInfo.coins}</p>
         </div>
       </div>
       {editMode ? (
