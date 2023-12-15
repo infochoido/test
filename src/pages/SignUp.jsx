@@ -63,6 +63,7 @@ export const Signup = () => {
         name: name,
         nickname: nickname,
         email: email,
+        coins: 1000,
       });
   
       console.log("User signed up:", user);
