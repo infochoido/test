@@ -28,6 +28,10 @@ export default function MyPage() {
     profilePicture: "", // 프로필 사진 URL
   });
 
+  const [editMode, setEditMode] = useState(false);
+  const [editedName, setEditedName] = useState(userInfo.name);
+  const [editedNickname, setEditedNickname] = useState(userInfo.nickname);
+
 
   useEffect(() => {
     const unsubscribe = getUser((userData) => {
@@ -101,6 +105,7 @@ export default function MyPage() {
 
 const handleUpdateProfile = async (updatedData) => {
   try {
+    console.log("Start handleUpdateProfile");
     const currentUser = auth.currentUser;
 
     if (currentUser) {
@@ -113,8 +118,12 @@ const handleUpdateProfile = async (updatedData) => {
         const userData = querySnapshot.docs[0].data();
         const userId = querySnapshot.docs[0].id;
 
+        console.log("userData:", userData);
+
         // 프로필 사진이 업데이트된 경우
         if (updatedData.profilePicture) {
+          console.log("Updating profile picture...");
+
           const storage = getStorage();
           const storageRef = ref(storage, `profile_pictures/${userId}`);
           await uploadBytes(storageRef, updatedData.profilePicture);
@@ -141,13 +150,6 @@ const handleUpdateProfile = async (updatedData) => {
           console.log("auth.photoURL이 성공적으로 업데이트되었습니다.");
         }
 
-        // 이름과 닉네임 업데이트
-        const userDocRef = doc(collection(db, 'users'), userId);
-        await updateDoc(userDocRef, {
-          name: updatedData.name || userData.name,
-          nickname: updatedData.nickname || userData.nickname,
-        });
-
         console.log("사용자 정보가 성공적으로 업데이트되었습니다.");
       } else {
         console.error("해당 이메일을 가진 사용자가 없습니다.");
@@ -159,14 +161,64 @@ const handleUpdateProfile = async (updatedData) => {
     console.error("사용자 정보 업데이트 중 오류가 발생했습니다:", error.message);
   }
 };
-  return (
-    <div className="w-full mt-4">
-      <div className="p-2 m-auto border-2">
+
+const handleUpdateName = async () => {
+  try {
+    console.log("Start handleUpdateName");
+    const currentUser = auth.currentUser;
+
+    if (currentUser) {
+      const userEmail = currentUser.email;
+
+      const q = query(collection(db, 'users'), where("email", "==", userEmail));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const userData = querySnapshot.docs[0].data();
+        const userId = querySnapshot.docs[0].id;
+        const userDocRef = doc(collection(db, 'users'), userId);
+        try {
+          await updateDoc(userDocRef, {
+            name: editedName || userData.name,
+            nickname: editedNickname || userData.nickname,
+          });
+
+          // Use the callback version of setUserInfo
+          setUserInfo(prevUserInfo => ({
+            ...prevUserInfo,
+            name: editedName || userData.name,
+            nickname: editedNickname || userData.nickname,
+          }));
+        } catch (error) {
+          console.error("Error updating document:", error.message);
+        }
+
+        await updateProfile(auth.currentUser, {
+          displayName: editedNickname || currentUser.displayName,
+        });
+
+        alert("이름과 닉네임이 성공적으로 업데이트되었습니다.");
+        setEditMode(false);
+      } else {
+        console.error("해당 이메일을 가진 사용자가 없습니다.");
+      }
+    } else {
+      console.error("사용자 정보를 업데이트할 수 없습니다. 사용자가 로그인되어 있지 않습니다.");
+    }
+  } catch (error) {
+    console.error("사용자 정보 업데이트 중 오류가 발생했습니다:", error.message);
+  }
+};
+
+
+
+return (
+  <div className="flex justify-center w-full mt-4 ">
+    <div className="p-3 m-auto border-2">
       <h1 className="mb-4 text-2xl">마이페이지</h1>
       <div className="flex flex-col space-y-6">
-        
         <div className="flex flex-col">
-        <p>프로필 사진</p>
+          <p>프로필 사진</p>
           <img
             src={userInfo.profilePicture}
             alt="프로필 사진"
@@ -174,7 +226,7 @@ const handleUpdateProfile = async (updatedData) => {
             className="border-2 border-black"
           />
           <input
-          className="mt-2 text-xs"
+            className="mt-2 text-xs"
             type="file"
             onChange={(e) => {
               const file = e.target.files[0];
@@ -185,11 +237,55 @@ const handleUpdateProfile = async (updatedData) => {
             }}
           />
         </div>
-        <p>이름: {userInfo.name}</p>
-        <p>닉네임: {userInfo.nickname}</p>
-        <p>이메일: {userInfo.email}</p>
+        <div className="flex flex-col space-y-3">
+          <p>
+            이름:{" "}
+            {editMode ? (
+              <input
+                type="text"
+                className="pl-1 border-2"
+                value={editedName}
+                onChange={(e) => setEditedName(e.target.value)}
+              />
+            ) : (
+              userInfo.name
+            )}
+          </p>
+          <p>
+            닉네임:{" "}
+            {editMode ? (
+              <input
+                type="text"
+                className="pl-1 border-2"
+                value={editedNickname}
+                onChange={(e) => setEditedNickname(e.target.value)}
+              />
+            ) : (
+              userInfo.nickname
+            )}
+          </p>
+          <p>이메일: {userInfo.email}</p>
+        </div>
       </div>
-      </div>
+      {editMode ? (
+        <button
+        className="px-1 mt-4 border-2"
+        onClick={() => {
+          handleUpdateName();
+          setEditMode(false);
+        }}
+      >
+        저장
+      </button>
+      ) : (
+        <button
+          className="px-1 mt-4 border-2"
+          onClick={() => setEditMode(true)}
+        >
+          수정
+        </button>
+      )}
     </div>
-  );
+  </div>
+);
 }
