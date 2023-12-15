@@ -13,8 +13,10 @@ export default function Doto() {
 
   useEffect(() => {
     const unsubscribe = getUser((userData) => {
-      fetchUserCoins(userData.email);
-      fetchLeaderboard();
+      if (userData) {
+        fetchUserCoins(userData.email);
+        fetchLeaderboard();
+      }
     });
     return () => unsubscribe();
   }, []);
@@ -165,7 +167,7 @@ export default function Doto() {
               </div>
             </>
           ) : (
-            <p>Loading...</p>
+            <p>로그인 해주세요!</p>
           )}
         </div>
       </div>
