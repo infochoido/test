@@ -9,6 +9,7 @@ export default function Doto() {
   const [userProfile, setUserProfile] = useState({ coins: 0 });
   const [gameResult, setGameResult] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   
 
   useEffect(() => {
@@ -67,6 +68,9 @@ export default function Doto() {
 
   const handleBet = async (isEven) => {
     try {
+      // Disable the button to prevent multiple clicks
+      setIsButtonDisabled(true);
+  
       // Generate a random result (0 for 홀, 1 for 짝)
       const randomResult = Math.floor(Math.random() * 2);
   
@@ -97,6 +101,11 @@ export default function Doto() {
       }
     } catch (error) {
       console.error("Error updating user coins:", error.message);
+    } finally {
+      // Enable the button after a delay
+      setTimeout(() => {
+        setIsButtonDisabled(false);
+      }, 300);
     }
   };
 
@@ -132,18 +141,24 @@ export default function Doto() {
                 </p>
   
                 <div className="flex justify-center space-x-3">
-                  <button
-                    className="p-10 text-xl text-white bg-green-600 shadow-md rounded-xl shadow-black"
-                    onClick={() => handleBet(true)}
-                  >
-                    홀
-                  </button>
-                  <button
-                    className="p-10 text-xl text-white bg-green-600 shadow-md rounded-xl shadow-black"
-                    onClick={() => handleBet(false)}
-                  >
-                    짝
-                  </button>
+                <button
+  className={`p-10 text-xl text-white shadow-md rounded-xl shadow-black ${
+    isButtonDisabled ? "bg-green-800" : "bg-green-600"
+  }`}
+  onClick={() => handleBet(true)}
+  disabled={isButtonDisabled}
+>
+  홀
+</button>
+<button
+  className={`p-10 text-xl text-white shadow-md rounded-xl shadow-black ${
+    isButtonDisabled ? "bg-green-800" : "bg-green-600"
+  }`}
+  onClick={() => handleBet(false)}
+  disabled={isButtonDisabled}
+>
+  짝
+</button>
                 </div>
               </div>
               <div className="">
