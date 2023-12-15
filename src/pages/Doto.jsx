@@ -169,7 +169,7 @@ export default function Doto() {
               </div>
             </>
           ) : (
-            <p>로그인 해주세요!</p>
+            <p>loading...</p>
           )}
         </div>
       </div>
