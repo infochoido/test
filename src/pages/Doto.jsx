@@ -116,7 +116,7 @@ export default function Doto() {
                   베팅할 코인개수:{" "}
                   <input
                     type="number"
-                    className="border-2"
+                    className="w-32 border-2"
                     value={betAmount}
                     onChange={(e) =>
                         setBetAmount(
