@@ -102,7 +102,7 @@ export default function Doto() {
 
   return (
     <>
-      <div className="flex flex-col justify-center w-full mt-4">
+      <div className="flex flex-col justify-center w-full mt-4 mb-36">
         <div className="p-3 m-auto space-y-3 border-2">
           <p className="mb-5 text-xl">도토(도현토토)</p>
           {userData ? (
@@ -146,7 +146,7 @@ export default function Doto() {
                   </button>
                 </div>
               </div>
-              <div>
+              <div className="">
                 <p className="mt-4 text-xl">코인 랭킹</p>
                 <table className="w-full border">
                   <thead>
