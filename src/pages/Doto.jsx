@@ -119,12 +119,13 @@ export default function Doto() {
                     className="border-2"
                     value={betAmount}
                     onChange={(e) =>
-                      setBetAmount(
-                        Math.max(10, parseInt(e.target.value)) || 0
-                      )
-                    }
+                        setBetAmount(
+                          Math.max(10, Math.min(100, parseInt(e.target.value))) || 0
+                        )
+                      }
                     step="10"
                     min="10"
+                    
                     defaultValue="10"
                   />{" "}
                 </p>

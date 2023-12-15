@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { collection, doc, getDocs, query, where, updateDoc } from 'firebase/firestore';
 import { auth, db, getUser } from '../firebase';
-import { useRecoilState } from "recoil";
-import { userProfileState } from '../recoilAtom';
+
 import { updateProfile } from "firebase/auth";
 
 const loadProfileFromLocalStorage = () => {
@@ -20,7 +19,7 @@ const saveProfileToLocalStorage = (profile) => {
 
 export default function MyPage() {
   const [user, setUser] = useState(null);
-  const [userProfile, setUserProfile] = useRecoilState(userProfileState);
+  const [userProfile, setUserProfile] = useState(user);
   const [userInfo, setUserInfo] = useState(loadProfileFromLocalStorage() || {
     name: "",
     nickname: "",
