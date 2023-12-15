@@ -126,8 +126,9 @@ export default function Doto() {
                     step="10"
                     min="10"
                     
-                    defaultValue="10"
                   />{" "}
+                  <button onClick={() => setBetAmount((prevAmount) => Math.min(100, prevAmount + 10))} className="mx-1">up</button>
+  <button onClick={() => setBetAmount((prevAmount) => Math.max(10, prevAmount - 10))} className="mx-1">down</button>
                 </p>
   
                 <div className="flex justify-center space-x-3">
