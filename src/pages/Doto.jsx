@@ -236,26 +236,26 @@ export default function Doto() {
     }
   };
 
-  const updateWinnerCoins = async (winnerEmail, prizeCoins) => {
-    try {
-      const q = query(collection(db, 'users'), where("email", "==", winnerEmail));
-      const querySnapshot = await getDocs(q);
+  // const updateWinnerCoins = async (winnerEmail, prizeCoins) => {
+  //   try {
+  //     const q = query(collection(db, 'users'), where("email", "==", winnerEmail));
+  //     const querySnapshot = await getDocs(q);
 
-      if (!querySnapshot.empty) {
-        const winnerDocRef = querySnapshot.docs[0].ref;
+  //     if (!querySnapshot.empty) {
+  //       const winnerDocRef = querySnapshot.docs[0].ref;
 
-        // Update winner's coins
-        await updateDoc(winnerDocRef, {
-          coins: prizeCoins + (winnerDocRef.data().coins || 0),
-        });
+  //       // Update winner's coins
+  //       await updateDoc(winnerDocRef, {
+  //         coins: prizeCoins + (winnerDocRef.data().coins || 0),
+  //       });
 
-        // Fetch updated user coins
-        fetchUserCoins(userData.email);
-      }
-    } catch (error) {
-      console.error("Error updating winner's coins:", error.message);
-    }
-  };
+  //       // Fetch updated user coins
+  //       fetchUserCoins(userData.email);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error updating winner's coins:", error.message);
+  //   }
+  // };
   
   const formatTime = (seconds) => {
     const hours = Math.floor(seconds / 3600);
