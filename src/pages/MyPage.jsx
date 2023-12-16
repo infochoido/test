@@ -84,7 +84,6 @@ export default function MyPage() {
           profilePicture: userData.profilePicture || "",
           coins: userData.coins,
         };
-        saveProfileToLocalStorage(profileInfo);
         return profileInfo;
       } else {
         console.error("해당 이메일을 가진 사용자가 없습니다.");
