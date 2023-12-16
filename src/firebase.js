@@ -46,9 +46,9 @@ export const getUser = (callback) => {
   return authUser;
 };
 
-export const updateAttendance = async (userEmail, currentDate) => {
+export const updateAttendance = async (userEmail, currentDateTime) => {
   try {
-    console.log(currentDate);
+    console.log(currentDateTime);
     // 'users' 컬렉션에 속한 사용자 문서를 가져옵니다.
     const usersCollectionRef = collection(db, 'users');
     const query1 = query(usersCollectionRef, where('email', '==', userEmail));
@@ -57,12 +57,14 @@ export const updateAttendance = async (userEmail, currentDate) => {
     if (!querySnapshot.empty) {
       // 이메일이 일치하는 사용자 문서를 가져옵니다.
       const userDoc = querySnapshot.docs[0];
-      const attendanceStatus = userDoc.data().attendance || {};
+      const attendanceStatus = userDoc.data()?.attendance || {};
 
-      if (attendanceStatus[currentDate]) {
+      // 오늘 날짜에 해당하는 출석 여부 확인
+      if (attendanceStatus[currentDateTime]) {
         console.log('이미 출석 완료');
       } else {
-        attendanceStatus[currentDate] = true;
+        // 오늘 날짜에 해당하는 출석 여부가 없으면 출석 처리
+        attendanceStatus[currentDateTime] = true;
         // 사용자 문서를 업데이트합니다.
         await updateDoc(userDoc.ref, { attendance: attendanceStatus });
         console.log('출석 완료');
@@ -87,7 +89,7 @@ export const addCoinsOnAttendance = async (userEmail) => {
     if (!querySnapshot.empty) {
       // 이메일이 일치하는 사용자 문서를 가져옵니다.
       const userDoc = querySnapshot.docs[0];
-      const userCoins = userDoc.data().coins || 0;
+      const userCoins = userDoc.data()?.coins || 0;
       const updatedCoins = userCoins + 1000;
       // 사용자 문서를 업데이트합니다.
       await updateDoc(userDoc.ref, { coins: updatedCoins });
@@ -110,12 +112,13 @@ export const addAttendanceStatus = async (userEmail, date) => {
 
     if (!querySnapshot.empty) {
       const userDoc = querySnapshot.docs[0];
-      const attendanceStatus = userDoc.data().attendance || false;
+      const attendanceData = userDoc.data()?.attendance || {};
 
-      if (attendanceStatus[date]) {
+      if (attendanceData[date]) {
         console.log('이미 출석 완료');
       } else {
-        await updateDoc(userDoc.ref, { [date]: true });
+        attendanceData[date] = true;
+        await updateDoc(userDoc.ref, { attendance: attendanceData });
         console.log('출석 완료');
       }
     } else {
@@ -126,7 +129,8 @@ export const addAttendanceStatus = async (userEmail, date) => {
   }
 };
 
-export const getAttendanceStatus = async (userEmail) => {
+
+export const getAttendanceStatus = async (userEmail, date) => {
   try {
     const usersCollectionRef = collection(db, 'users');
     const query1 = query(usersCollectionRef, where('email', '==', userEmail));
@@ -134,9 +138,8 @@ export const getAttendanceStatus = async (userEmail) => {
 
     if (!querySnapshot.empty) {
       const userDoc = querySnapshot.docs[0];
-      const attendanceStatus = userDoc.data().attendance || false;
-      console.log(userDoc.data())
-      return attendanceStatus;
+      const attendanceData = userDoc.data()?.attendance || {};
+      return attendanceData[date] || false;
     } else {
       console.error('User document not found for email:', userEmail);
       return false;

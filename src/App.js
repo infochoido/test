@@ -31,20 +31,25 @@ function App() {
     return `${year}-${month}-${day}`;
   };
 
+
   useEffect(() => {
     getUser(async (user) => {
       if (user) {
         const currentDate = getCurrentDate();
         const hasAttendedToday = await getAttendanceStatus(user.email, currentDate);
-        console.log(user.email);
-        console.log(currentDate)
-        console.log(hasAttendedToday)
-  
+
         if (!hasAttendedToday) {
           updateAttendance(user.email, currentDate);
           addCoinsOnAttendance(user.email);
-          addAttendanceStatus(user.email, currentDate);
-          console.log("코인 추가");
+          const addedSuccessfully = await addAttendanceStatus(user.email, currentDate);
+
+          if (addedSuccessfully) {
+            console.log("코인 추가 및 출석 완료");
+          } else {
+            console.log("코인은 추가되었지만 출석 정보는 이미 존재합니다.");
+          }
+        } else {
+          console.log("이미 출석한 날짜입니다.");
         }
       }
     });
