@@ -11,18 +11,8 @@ export default function MainQuote() {
   const [mainQuote, setMainQuote] = useState("");
 
   useEffect(() => {
-    // Retrieve myCoinInfo and mainQuote from localStorage on component mount
-    const storedCoinInfo = JSON.parse(localStorage.getItem("myCoinInfo"));
-    if (storedCoinInfo) {
-      setMyCoinInfo(storedCoinInfo);
-    }
-
-    const storedMainQuote = localStorage.getItem("mainQuote");
-    if (storedMainQuote) {
-      setMainQuote(storedMainQuote);
-    }
-
     const currentUser = auth.currentUser;
+
     if (currentUser) {
       const userEmail = currentUser.email;
       setUserEmail(userEmail);
@@ -39,9 +29,6 @@ export default function MainQuote() {
             coins: userData.coins,
           };
           setMyCoinInfo(userCoinInfo);
-
-          // Save myCoinInfo to localStorage
-          localStorage.setItem("myCoinInfo", JSON.stringify(userCoinInfo));
         }
       } catch (error) {
         console.error(error.message);
@@ -52,9 +39,22 @@ export default function MainQuote() {
   }, [userEmail]);
 
   useEffect(() => {
-    // Save mainQuote to localStorage when it changes
-    localStorage.setItem("mainQuote", mainQuote);
-  }, [mainQuote]);
+    const fetchMainQuote = async () => {
+      try {
+        const mainQuoteRef = doc(db, "mainQuote", mainQuoteId);
+        const mainQuoteDocSnap = await getDoc(mainQuoteRef);
+
+        if (mainQuoteDocSnap.exists()) {
+          const mainQuoteData = mainQuoteDocSnap.data();
+          setMainQuote(mainQuoteData.quote);
+        }
+      } catch (error) {
+        console.error("Error fetching main quote:", error.message);
+      }
+    };
+
+    fetchMainQuote();
+  }, [mainQuoteId]);
 
   const handleSaveQuote = async () => {
     try {
