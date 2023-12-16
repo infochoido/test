@@ -12,7 +12,10 @@ export default function Home() {
   const [existingPostId, setExistingPostId] = useState(null);
   const [userCoins, setUserCoins] = useState(0); // State to store the user's current coins
 
-  
+  useEffect(() => {
+    // Clear refreshed status in localStorage when home screen is visited
+    localStorage.removeItem("refreshed");
+  }, []);
 
   return (
     <div className="relative w-full my-5 font-black text-center">
