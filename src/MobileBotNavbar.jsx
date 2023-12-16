@@ -11,6 +11,7 @@ import Grid4x4Icon from '@mui/icons-material/Grid4x4';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import { useNavigate, useLocation } from 'react-router-dom';
 
+
 export default function SimpleBottomNavigation() {
   const [value, setValue] = React.useState(0);
   const navigate = useNavigate();
@@ -76,7 +77,7 @@ export default function SimpleBottomNavigation() {
         <BottomNavigationAction 
           label={
             <Typography variant="body2" style={{ fontFamily: 'TheJamsil5Bold, sans-serif' }}>
-              도토
+              게임
             </Typography>
           }
           icon={<MonetizationOnIcon />}

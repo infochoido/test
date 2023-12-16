@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { collection, addDoc, doc, getDoc, setDoc, updateDoc, query, where, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 import { auth } from "../firebase";
+import MainQuote from "../components/MainQuote";
 
 // export const updateCoins = async (userEmail, amount) => {
 //   try {
@@ -181,6 +182,7 @@ export default function Home() {
           </p>
         </div>
       </div>
+      <MainQuote />
 
       {/* <div className="flex flex-col">
           {isEditing ? (
