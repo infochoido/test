@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { collection, doc, getDocs, query, where, updateDoc } from 'firebase/firestore';
+import { collection, doc, getDocs, query, where, updateDoc, deleteDoc } from 'firebase/firestore';
 import { auth, db, getUser } from '../firebase';
-
+import { useNavigate } from 'react-router-dom'
 import { updateProfile } from "firebase/auth";
 
 const loadProfileFromLocalStorage = () => {
@@ -27,6 +27,8 @@ export default function MyPage() {
     profilePicture: "",
     coins: 0, // 프로필 사진 URL
   });
+  const [refreshed, setRefreshed] = useState(false);
+  const navigate = useNavigate();
 
   const [editMode, setEditMode] = useState(false);
   const [editedName, setEditedName] = useState(userInfo.name);
@@ -38,9 +40,16 @@ export default function MyPage() {
       console.log("User data from getUser:", userData);
       setUser(userData);
     });
+    const needsRefresh = !refreshed && !localStorage.getItem("refreshed");
 
+    if (needsRefresh) {
+      // Set refreshed status in localStorage
+      localStorage.setItem("refreshed", true);
+      // Refresh the page
+      window.location.reload();
+    }
     return () => unsubscribe();
-  }, []);
+  }, [refreshed]);
 
   useEffect(() => {
     if (user) {
@@ -211,6 +220,48 @@ const handleUpdateName = async () => {
 };
 
 
+const handleDeleteAccount = async () => {
+  try {
+    const currentUser = auth.currentUser;
+
+    if (currentUser) {
+      const userEmail = currentUser.email;
+
+      const q = query(collection(db, 'users'), where("email", "==", userEmail));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const userId = querySnapshot.docs[0].id;
+
+        // Delete user data from Firestore
+        user.delete().then(()=>{
+          alert("회원탈퇴가 완료되었습니다")
+        }).catch((error) => {
+          alert(error)
+        })
+
+       
+
+        // Delete the user account
+        await deleteDoc(doc(db, "users", userId))
+
+        // Clear local storage
+        localStorage.removeItem("userProfile");
+
+        // Redirect or show a success message as needed
+        console.log("User account deleted successfully.");
+        navigate('/');
+      } else {
+        console.error("해당 이메일을 가진 사용자가 없습니다.");
+      }
+    } else {
+      console.error("사용자 정보를 삭제할 수 없습니다. 사용자가 로그인되어 있지 않습니다.");
+    }
+  } catch (error) {
+    console.error("사용자 정보 삭제 중 오류가 발생했습니다:", error.message);
+  }
+};
+
 
 return (
   <div className="flex justify-center w-full mt-4 ">
@@ -286,6 +337,13 @@ return (
           수정
         </button>
       )}
+      {/* 회원탈퇴 버튼 */}
+      <button
+          className="px-1 mx-2 mt-4 border-2"
+          onClick={handleDeleteAccount}
+        >
+          회원탈퇴
+        </button>
     </div>
   </div>
 );
