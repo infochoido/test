@@ -126,6 +126,11 @@ export default function Doto() {
     try {
       // Generate a random result (0 for 홀, 1 for 짝)
       const randomResult = Math.floor(Math.random() * 2);
+
+      if (userProfile.coins < betAmount) {
+        alert("코인이 부족합니다!");
+        return;
+      }
   
       // Calculate winnings based on the bet result
       const winnings = randomResult === (isEven ? 0 : 1) ? betAmount : -betAmount;
