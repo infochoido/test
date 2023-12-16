@@ -3,7 +3,7 @@ import { collection, addDoc, serverTimestamp, getDocs, query, where } from 'fire
 import { useNavigate } from 'react-router-dom';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
 export default function MakeTest() {
@@ -121,6 +121,26 @@ export default function MakeTest() {
   
         const newDocId = docRef.id;
         alert('글 작성완료');
+
+        if (userInfo) {
+          const usersCollectionRef = collection(db, 'users');
+          const query1 = query(usersCollectionRef, where('email', '==', userEmail));
+          const querySnapshot = await getDocs(query1);
+  
+          if (!querySnapshot.empty) {
+            const userDoc = querySnapshot.docs[0];
+            const userCoins = userDoc.data().coins || 0;
+            const updatedCoins = userCoins + 100;
+            await updateDoc(userDoc.ref, { coins: updatedCoins });
+            alert('코인 100 추가!');
+          } else {
+            console.error('User document not found for email:', userEmail);
+          }
+        } else {
+          console.error('User information not found for email:', userEmail);
+        }
+
+
         navigate(`/post/${newDocId}`);
       } catch (error) {
         console.error('글 작성 실패:', error);

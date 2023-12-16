@@ -101,14 +101,11 @@ export default function MyPage() {
     setUserInfo((prevUserInfo) => ({ ...prevUserInfo, profilePicture: downloadUrl }));
   };
 
-  useEffect(() => {
-    console.log("Updated UserProfile:", userProfile);
-}, [userProfile]);
 
 
 const handleUpdateProfile = async (updatedData) => {
   try {
-    console.log("Start handleUpdateProfile");
+
     const currentUser = auth.currentUser;
 
     if (currentUser) {
@@ -121,18 +118,18 @@ const handleUpdateProfile = async (updatedData) => {
         const userData = querySnapshot.docs[0].data();
         const userId = querySnapshot.docs[0].id;
 
-        console.log("userData:", userData);
+       
 
         // 프로필 사진이 업데이트된 경우
         if (updatedData.profilePicture) {
-          console.log("Updating profile picture...");
+         
 
           const storage = getStorage();
           const storageRef = ref(storage, `profile_pictures/${userId}`);
           await uploadBytes(storageRef, updatedData.profilePicture);
 
           const downloadUrl = await getDownloadURL(storageRef);
-          console.log("Download URL:", downloadUrl);
+          
 
           // Firestore에 프로필 사진 URL 업데이트
           const userDocRef = doc(collection(db, 'users'), userId);
@@ -142,7 +139,7 @@ const handleUpdateProfile = async (updatedData) => {
             photoURL: downloadUrl,
           });
 
-          console.log("프로필 사진이 성공적으로 업데이트되었습니다.");
+        
           updateProfilePicture(downloadUrl);
 
           // Update the user's photoURL in the auth object
@@ -167,7 +164,7 @@ const handleUpdateProfile = async (updatedData) => {
 
 const handleUpdateName = async () => {
   try {
-    console.log("Start handleUpdateName");
+   
     const currentUser = auth.currentUser;
 
     if (currentUser) {
