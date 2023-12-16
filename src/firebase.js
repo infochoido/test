@@ -9,6 +9,10 @@ import {
   onAuthStateChanged
 } from 'firebase/auth';
 
+import { doc, getDoc, } from 'firebase/firestore';
+import { updateDoc } from 'firebase/firestore';
+import { setDoc, serverTimestamp, collection, query, getDocs, where } from 'firebase/firestore';
+
 
 const firebaseConfig = {
   apiKey: "AIzaSyDsay0eJbHv-cfJU-J5thQfoHmClrxnJmM",
@@ -33,9 +37,114 @@ export const loginEmail = (email, password) => {
 };
 
 export const getUser = (callback) => {
-  return onAuthStateChanged(auth, (user) => {
-    callback(user);
+  const authUser = onAuthStateChanged(auth, (user) => {
+    if (typeof callback === 'function') {
+      callback(user);
+    }
   });
+
+  return authUser;
+};
+
+export const updateAttendance = async (userEmail, currentDate) => {
+  try {
+    console.log(currentDate);
+    // 'users' 컬렉션에 속한 사용자 문서를 가져옵니다.
+    const usersCollectionRef = collection(db, 'users');
+    const query1 = query(usersCollectionRef, where('email', '==', userEmail));
+    const querySnapshot = await getDocs(query1);
+
+    if (!querySnapshot.empty) {
+      // 이메일이 일치하는 사용자 문서를 가져옵니다.
+      const userDoc = querySnapshot.docs[0];
+      const attendanceStatus = userDoc.data().attendance || {};
+
+      if (attendanceStatus[currentDate]) {
+        console.log('이미 출석 완료');
+      } else {
+        attendanceStatus[currentDate] = true;
+        // 사용자 문서를 업데이트합니다.
+        await updateDoc(userDoc.ref, { attendance: attendanceStatus });
+        console.log('출석 완료');
+      }
+    } else {
+      console.error('User document not found for email:', userEmail);
+    }
+  } catch (error) {
+    console.error('Error updating attendance:', error.message);
+  }
+};
+
+
+
+export const addCoinsOnAttendance = async (userEmail) => {
+  try {
+    // 'users' 컬렉션에 속한 사용자 문서를 가져옵니다.
+    const usersCollectionRef = collection(db, 'users');
+    const query1 = query(usersCollectionRef, where('email', '==', userEmail));
+    const querySnapshot = await getDocs(query1);
+
+    if (!querySnapshot.empty) {
+      // 이메일이 일치하는 사용자 문서를 가져옵니다.
+      const userDoc = querySnapshot.docs[0];
+      const userCoins = userDoc.data().coins || 0;
+      const updatedCoins = userCoins + 1000;
+      // 사용자 문서를 업데이트합니다.
+      await updateDoc(userDoc.ref, { coins: updatedCoins });
+      alert('코인 추가 완료');
+    } else {
+      console.error('User document not found for email:', userEmail);
+    }
+  } catch (error) {
+    console.error('Error adding coins on attendance:', error.message);
+  }
+};
+
+
+
+export const addAttendanceStatus = async (userEmail, date) => {
+  try {
+    const usersCollectionRef = collection(db, 'users');
+    const query1 = query(usersCollectionRef, where('email', '==', userEmail));
+    const querySnapshot = await getDocs(query1);
+
+    if (!querySnapshot.empty) {
+      const userDoc = querySnapshot.docs[0];
+      const attendanceStatus = userDoc.data().attendance || false;
+
+      if (attendanceStatus[date]) {
+        console.log('이미 출석 완료');
+      } else {
+        await updateDoc(userDoc.ref, { [date]: true });
+        console.log('출석 완료');
+      }
+    } else {
+      console.error('User document not found for email:', userEmail);
+    }
+  } catch (error) {
+    console.error('Error updating attendance:', error.message);
+  }
+};
+
+export const getAttendanceStatus = async (userEmail) => {
+  try {
+    const usersCollectionRef = collection(db, 'users');
+    const query1 = query(usersCollectionRef, where('email', '==', userEmail));
+    const querySnapshot = await getDocs(query1);
+
+    if (!querySnapshot.empty) {
+      const userDoc = querySnapshot.docs[0];
+      const attendanceStatus = userDoc.data().attendance || false;
+      console.log(userDoc.data())
+      return attendanceStatus;
+    } else {
+      console.error('User document not found for email:', userEmail);
+      return false;
+    }
+  } catch (error) {
+    console.error('Error getting attendance status:', error.message);
+    return false;
+  }
 };
 
 

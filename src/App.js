@@ -13,10 +13,43 @@ import LoginForm from './pages/Login';
 import { Signup } from './pages/SignUp';
 import MyPage from './pages/MyPage';
 import Doto from './pages/Doto'
+import { useEffect } from 'react';
+import { getUser } from './firebase';
+import { addCoinsOnAttendance } from './firebase'; 
+import { updateAttendance } from './firebase';
+import { getAttendanceStatus, addAttendanceStatus } from './firebase';
+
 
 
 function App() {
 
+  const getCurrentDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  useEffect(() => {
+    getUser(async (user) => {
+      if (user) {
+        const currentDate = getCurrentDate();
+        const hasAttendedToday = await getAttendanceStatus(user.email, currentDate);
+        console.log(user.email);
+        console.log(currentDate)
+        console.log(hasAttendedToday)
+  
+        if (!hasAttendedToday) {
+          updateAttendance(user.email, currentDate);
+          addCoinsOnAttendance(user.email);
+          addAttendanceStatus(user.email, currentDate);
+          console.log("코인 추가");
+        }
+      }
+    });
+  }, []);
+  
   return (
     <BrowserRouter>
       <div className="mx-2 bg-white App">
