@@ -8,11 +8,10 @@ import {
   createUserWithEmailAndPassword, //email 회원가입
   onAuthStateChanged
 } from 'firebase/auth';
-
-import { doc, getDoc, } from 'firebase/firestore';
+import 'firebase/database';
 import { updateDoc } from 'firebase/firestore';
 import { setDoc, serverTimestamp, collection, query, getDocs, where } from 'firebase/firestore';
-
+import { getDatabase } from "firebase/database";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDsay0eJbHv-cfJU-J5thQfoHmClrxnJmM",
@@ -20,13 +19,15 @@ const firebaseConfig = {
   projectId: "test-875d8",
   storageBucket: "test-875d8.appspot.com",
   messagingSenderId: "230819283164",
-  appId: "1:230819283164:web:e2ef3e93945fc3c0593419"
+  appId: "1:230819283164:web:e2ef3e93945fc3c0593419",
+  databaseURL: "https://test-875d8-default-rtdb.asia-southeast1.firebasedatabase.app/",
 };
-const app = initializeApp(firebaseConfig);
+const app =  initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 export const db = getFirestore(app);
 export const firebaseDb = getFirestore(app);
+export const realdb = getDatabase(app);
 
 export const signupEmail = (email, password) => {
   return createUserWithEmailAndPassword(auth, email, password);

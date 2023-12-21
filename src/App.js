@@ -18,6 +18,8 @@ import { getUser } from './firebase';
 import { addCoinsOnAttendance } from './firebase'; 
 import { updateAttendance } from './firebase';
 import { getAttendanceStatus, addAttendanceStatus } from './firebase';
+import Gun from "./pages/Gun"
+import GunGames from './pages/GunGame';
 
 
 
@@ -48,9 +50,7 @@ function App() {
           } else {
             console.log("코인은 추가되었지만 출석 정보는 이미 존재합니다.");
           }
-        } else {
-          console.log("이미 출석한 날짜입니다.");
-        }
+        } 
       }
     });
   }, []);
@@ -69,6 +69,8 @@ function App() {
           <Route path="/login" element={<LoginForm />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/mypage" element={<MyPage />} />
+          <Route path="/gun" element={<Gun />} />
+          <Route path="/gameplay/:gameId" element={<GunGames />} />
         </Routes>
         <SimpleBottomNavigation />
       </div>
