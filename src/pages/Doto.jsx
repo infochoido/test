@@ -1,7 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { getDoc,addDoc, doc, collection, updateDoc, query, getDocs, where, setDoc, orderBy } from 'firebase/firestore';
-import { db, auth } from '../firebase';
+import {
+  getDoc,
+  addDoc,
+  doc,
+  collection,
+  updateDoc,
+  query,
+  getDocs,
+  where,
+  setDoc,
+  orderBy,
+} from "firebase/firestore";
+import { db, auth } from "../firebase";
 import { getUser } from "../firebase";
+import { serverTimestamp } from "firebase/firestore";
 
 export default function Doto() {
   const [betAmount, setBetAmount] = useState(10);
@@ -16,57 +28,12 @@ export default function Doto() {
   const [isLotteryDrawn, setIsLotteryDrawn] = useState(false);
   const [lotteryDocId, setLotteryDocId] = useState(null);
 
-  useEffect(() => {
-    // Fetch the lottery document when the component mounts
-    fetchLotteryDoc();
-
-  }, []);
-
-  const fetchLotteryDoc = async () => {
-    try {
-      const lotteryQuery = query(collection(db, "lottery"));
-      const lotterySnapshot = await getDocs(lotteryQuery);
-  
-      if (!lotterySnapshot.empty) {
-        const lotteryData = lotterySnapshot.docs[0].data();
-        setLotteryDocId(lotterySnapshot.docs[0].id);
-        setTimeRemaining(lotteryData.countdownTime);
-        setLotteryTotalAmount(lotteryData.totalAmount);
-        console.log("Lottery Data:", lotteryData);
-      } else {
-        // Create a new lottery document if it doesn't exist
-        const newLotteryDocRef = await addDoc(collection(db, "lottery"), {
-          countdownTime: 24 * 60 * 60, // Initial countdown time in seconds
-          totalAmount: 0, // Initial total amount
-        });
-        setLotteryDocId(newLotteryDocRef.id);
-        console.log("New lottery document created:", newLotteryDocRef.id);
-      }
-    } catch (error) {
-      console.error("Error fetching/creating lottery document:", error.message);
-    }
-  };
 
   const handleMenuClick = (section) => {
     setActiveSection(section);
   };
-  
-  useEffect(() => {
-    let interval;
 
-    // Update the countdown every second
-    if (timeRemaining > 0 && !isLotteryDrawn) {
-      interval = setInterval(() => {
-        setTimeRemaining((prevTime) => prevTime - 1);
-      }, 1000);
-    } else if (timeRemaining <= 0 && !isLotteryDrawn) {
-      // Perform the lottery draw when the countdown reaches zero
-      performLotteryDraw();
-      setIsLotteryDrawn(true);
-    }
-    return () => clearInterval(interval);
-  }, [timeRemaining, isLotteryDrawn]);
-  
+
 
   useEffect(() => {
     const unsubscribe = getUser((userData) => {
@@ -91,9 +58,12 @@ export default function Doto() {
 
   const fetchLeaderboard = async () => {
     try {
-      const leaderboardQuery = query(collection(db, 'users'), orderBy("coins", "desc"));
+      const leaderboardQuery = query(
+        collection(db, "users"),
+        orderBy("coins", "desc")
+      );
       const leaderboardSnapshot = await getDocs(leaderboardQuery);
-      const leaderboardData = leaderboardSnapshot.docs.map(doc => doc.data());
+      const leaderboardData = leaderboardSnapshot.docs.map((doc) => doc.data());
       setLeaderboard(leaderboardData);
     } catch (error) {
       console.error("Error fetching leaderboard:", error.message);
@@ -102,13 +72,13 @@ export default function Doto() {
 
   const getUserInfoByEmail = async (userEmail) => {
     try {
-      const q = query(collection(db, 'users'), where("email", "==", userEmail));
+      const q = query(collection(db, "users"), where("email", "==", userEmail));
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
         const userData = querySnapshot.docs[0].data();
-        console.log(userData)
-        setUserData(userData)
+        console.log(userData);
+        setUserData(userData);
         const profileInfo = {
           coins: userData.coins || 0,
         };
@@ -131,28 +101,32 @@ export default function Doto() {
         alert("코인이 부족합니다!");
         return;
       }
-  
+
       // Calculate winnings based on the bet result
-      const winnings = randomResult === (isEven ? 0 : 1) ? betAmount : -betAmount;
-  
+      const winnings =
+        randomResult === (isEven ? 0 : 1) ? betAmount : -betAmount;
+
       // Update user's coins in the database
-      const q = query(collection(db, 'users'), where("email", "==", userData.email));
+      const q = query(
+        collection(db, "users"),
+        where("email", "==", userData.email)
+      );
       const querySnapshot = await getDocs(q);
-  
+
       if (!querySnapshot.empty) {
         const userDocRef = querySnapshot.docs[0].ref;
-  
+
         // User document exists, update coins
         await updateDoc(userDocRef, {
           coins: userProfile.coins + winnings,
         });
-  
+
         // Fetch updated user coins
         fetchUserCoins(userData.email);
-  
+
         // Set the game result for display
         setGameResult(randomResult === 0 ? "홀" : "짝");
-  
+
         console.log("Bet successful!");
       } else {
         console.error("User document not found for email:", userData.email);
@@ -167,101 +141,7 @@ export default function Doto() {
     }
   };
 
-  const handleLotteryPurchase = async () => {
-    try {
-      const q = query(collection(db, "users"), where("email", "==", userData.email));
-      const querySnapshot = await getDocs(q);
-  
-      // Check if the user has enough coins to purchase a lottery ticket
-      if (userProfile.coins >= 100) {
-        const userDocRef = querySnapshot.docs[0].ref;
-  
-        // Deduct 100 coins from the user's balance
-        await updateDoc(userDocRef, {
-          coins: userProfile.coins - 100,
-        });
-  
-        // Update the user's coins locally
-        setUserProfile((prevProfile) => ({
-          ...prevProfile,
-          coins: prevProfile.coins - 100,
-        }));
-  
-        // Update the total amount spent on lottery tickets
-        setLotteryTotalAmount((prevAmount) => prevAmount + 100);
-  
-        // Start the countdown for lottery draw (e.g., set a timeout for 24 hours)
-        setTimeout(() => {
-          // Perform the lottery draw here
-          performLotteryDraw();
-        }, 24 * 60 * 60 * 1000); // 24 hours in milliseconds
-      } else {
-        alert("코인이 부족합니다!");
-      }
-    } catch (error) {
-      console.error("Error purchasing lottery ticket:", error.message);
-    }
-  };
 
-  const performLotteryDraw = async () => {
-    try {
-      // Update the countdown time in the database
-      const lotteryDocRef = doc(db, "lottery", lotteryDocId);
-      await updateDoc(lotteryDocRef, {
-        countdownTime: 24 * 60 * 60,
-        totalAmount: 0, // Reset countdown time to 24 hours and reset total amount
-      });
-  
-      console.log(lotteryDocRef);
-  
-      // Add your logic for lottery draw here
-      console.log("Performing lottery draw...");
-  
-      // For example, select a random user from the database
-      const lotteryParticipants = await getDocs(collection(db, "users"));
-      const randomIndex = Math.floor(Math.random() * lotteryParticipants.size);
-      const winnerDoc = lotteryParticipants.docs[randomIndex];
-  
-      // Get the winner's data
-      const winnerData = winnerDoc.data();
-      console.log("Winner:", winnerData);
-  
-      // Award coins to the winner (you can define your own logic for this)
-      const winnerDocRef = winnerDoc.ref;
-      await updateDoc(winnerDocRef, {
-        coins: winnerData.coins + lotteryTotalAmount, // Awarding the accumulated total amount
-      });
-  
-      // Update the leaderboard after the lottery draw
-      fetchLeaderboard();
-  
-      console.log("Lottery draw completed!");
-    } catch (error) {
-      console.error("Error performing lottery draw:", error.message);
-    }
-  };
-
-  // const updateWinnerCoins = async (winnerEmail, prizeCoins) => {
-  //   try {
-  //     const q = query(collection(db, 'users'), where("email", "==", winnerEmail));
-  //     const querySnapshot = await getDocs(q);
-
-  //     if (!querySnapshot.empty) {
-  //       const winnerDocRef = querySnapshot.docs[0].ref;
-
-  //       // Update winner's coins
-  //       await updateDoc(winnerDocRef, {
-  //         coins: prizeCoins + (winnerDocRef.data().coins || 0),
-  //       });
-
-  //       // Fetch updated user coins
-  //       fetchUserCoins(userData.email);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error updating winner's coins:", error.message);
-  //   }
-  // };
-  
   const formatTime = (seconds) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -276,16 +156,12 @@ export default function Doto() {
         <div className="p-3 m-auto space-y-3 border-2">
           <div className="flex justify-center space-x-5">
             <button
-              className={`text-lg p-1 ${activeSection === "doto" ? "font-bold bg-gray-200" : ""}`}
+              className={`text-lg p-1 ${
+                activeSection === "doto" ? "font-bold bg-gray-200" : ""
+              }`}
               onClick={() => handleMenuClick("doto")}
             >
               도토
-            </button>
-            <button
-              className={`text-lg p-1 ${activeSection === "lottery" ? "font-bold bg-gray-200" : ""}`}
-              onClick={() => handleMenuClick("lottery")}
-            >
-              복권
             </button>
           </div>
 
@@ -305,20 +181,29 @@ export default function Doto() {
                     value={betAmount}
                     onChange={(e) =>
                       setBetAmount(
-                        Math.max(10, Math.min(100, parseInt(e.target.value))) || 0
+                        Math.max(10, Math.min(100, parseInt(e.target.value))) ||
+                          0
                       )
                     }
                     step="10"
                     min="10"
                   />{" "}
                   <button
-                    onClick={() => setBetAmount((prevAmount) => Math.min(100, prevAmount + 10))}
+                    onClick={() =>
+                      setBetAmount((prevAmount) =>
+                        Math.min(100, prevAmount + 10)
+                      )
+                    }
                     className="mx-1"
                   >
                     up
                   </button>
                   <button
-                    onClick={() => setBetAmount((prevAmount) => Math.max(10, prevAmount - 10))}
+                    onClick={() =>
+                      setBetAmount((prevAmount) =>
+                        Math.max(10, prevAmount - 10)
+                      )
+                    }
                     className="mx-1"
                   >
                     down
@@ -347,31 +232,9 @@ export default function Doto() {
                 </div>
               </div>
             </>
-          ) : activeSection === "lottery" ? (
-            <>
-              <div className="space-y-3">
-                <p className="text-xl w-[320px]">복권 구매(개발중)</p>
-                <p>현재 남은 코인: {userProfile.coins}</p>
-                <p>현재 총 누적 금액: {lotteryTotalAmount}</p>
-                <button
-                  onClick={handleLotteryPurchase}
-                  className="px-1 text-white bg-green-600"
-                  //disabled={isLotteryDrawn}
-                  disabled="true"
-                >
-                  복권 구매하기
-                </button>
-                <p>가격 100코인</p>
-                {isLotteryDrawn ? (
-                  <p>복권 추첨 결과: 추첨 완료</p>
-                ) : (
-                  <p>복권 추첨까지 남은 시간: {formatTime(timeRemaining)}</p>
-                )}
-              </div>
-            </>
-          ) : (
+          ) :
             <p>loading...</p>
-          )}
+                  }
 
           <div className="">
             <p className="mt-4 text-xl">코인 랭킹</p>

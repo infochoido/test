@@ -3,6 +3,7 @@ import { collection, addDoc, doc, getDoc, setDoc, updateDoc, query, where, getDo
 import { db } from "../firebase";
 import { auth } from "../firebase";
 import MainQuote from "../components/MainQuote";
+import Lottery from "../components/Lottery";
 
 
 
@@ -20,7 +21,7 @@ export default function Home() {
   return (
     <div className="relative w-full my-5 font-black text-center">
       <p style={{ fontSize: "6vw" }}>CHOI DOHYUN COMMUNITY</p>
-      <div className="flex justify-center h-96">
+      {/* <div className="flex justify-center h-96">
         <div className="relative overflow-hidden rounded-2xl max-w-[500px] w-full m-5">
           <img src="/woo.jpg" alt="Woo" className="object-cover w-full h-full" />
           <p
@@ -39,7 +40,8 @@ export default function Home() {
             박재원
           </p>
         </div>
-      </div>
+      </div> */}
+      <Lottery />
       <div className="mb-40">
       <MainQuote />
       </div>
